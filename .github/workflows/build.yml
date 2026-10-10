@@ -43,7 +43,7 @@ jobs:
       - name: Rename APK
         run: |
           mkdir -p out
-          cp app/build/outputs/apk/release/app-release.apk "out/Crystal Altar.apk"
+          cp app/build/outputs/apk/release/app-release.apk out/CrystalAltar.apk
       - uses: actions/upload-artifact@v4
         with:
           name: Crystal Altar
