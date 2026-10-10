@@ -5,7 +5,7 @@
   "description": "Фэнтезийная игра «Кристальный алтарь».",
   "start_url": "/",
   "scope": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#111111",
   "theme_color": "#171717",
   "icons": [
