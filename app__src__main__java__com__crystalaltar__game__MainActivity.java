@@ -51,7 +51,13 @@ public class MainActivity extends Activity {
 
         web.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
-                return loader.shouldInterceptRequest(r.getUrl());
+                WebResourceResponse res = loader.shouldInterceptRequest(r.getUrl());
+                if (res == null && HOST.equals(r.getUrl().getHost())) {
+                    // нет такого локального файла (например favicon) — отвечаем сразу, не идём в сеть
+                    return new WebResourceResponse("text/plain", "utf-8", 404, "Not Found",
+                        new java.util.HashMap<String, String>(), new java.io.ByteArrayInputStream(new byte[0]));
+                }
+                return res;
             }
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
                 if (HOST.equals(r.getUrl().getHost())) return false;
