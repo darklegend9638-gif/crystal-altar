@@ -40,11 +40,7 @@ jobs:
       - run: gradle assembleRelease
         env:
           VERSION_CODE: ${{ github.run_number }}
-      - name: Rename APK
-        run: |
-          mkdir -p out
-          cp app/build/outputs/apk/release/app-release.apk out/CrystalAltar.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: Crystal Altar
-          path: out/Crystal Altar.apk
+          name: CrystalAltar-APK
+          path: app/build/outputs/apk/release/Crystal Altar.apk
