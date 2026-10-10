@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.crystalaltar.game",
+      "sha256_cert_fingerprints": [
+        "0E:D3:B6:F2:AC:1B:7C:D9:D8:A9:2A:7B:A3:9B:9F:D3:3C:C2:FD:23:DF:B9:71:95:D9:B6:11:2C:3F:7D:DC:B3"
+      ]
+    }
+  }
+]
