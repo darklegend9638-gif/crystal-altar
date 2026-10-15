@@ -2461,16 +2461,19 @@ window.openPlayerProfile=showProfile;
 <script>
 (function(){
 /* ===== ОБМЕННИК 💎 ⇄ 🪙 — курс меняется здесь ===== */
-const BUY=600,   /* покупка: сколько монет за 1 тикет */
-      SELL=400;  /* продажа: сколько монет дают за 1 тикет */
+const BUY0=600,   /* покупка: сколько монет за 1 тикет в главном мире */
+      SELL0=400;  /* продажа: сколько монет дают за 1 тикет в главном мире */
+/* в каждом следующем мире курс выше — множитель как у цены ролла (GM) */
+let BUY=BUY0,SELL=SELL0;
+const rt=()=>{const m=window.wGm?window.wGm():1;BUY=BUY0*m;SELL=SELL0*m};
 let dir="g2c";
 Object.assign(TX,{"Обменник":"Exchange"});
 const gem=()=>Math.floor(S.gem||0),coin=()=>Math.floor(S.coins||0);
 const inp=$("ex_in");
-const maxN=()=>dir==="g2c"?gem():Math.floor(coin()/BUY);
+const maxN=()=>{rt();return dir==="g2c"?gem():Math.floor(coin()/BUY)};
 const cnt=()=>Math.max(0,Math.floor(+inp.value)||0);
 function upd(){
- const g2c=dir==="g2c",n=cnt();
+ rt();const g2c=dir==="g2c",n=cnt();
  $("ex_t").textContent="💱 "+L2("Обменник","Exchange");
  $("ex_s").textContent=L2("Меняй тикеты на монеты и обратно. Покупать тикеты дороже, чем продавать.","Swap tickets for coins and back. Buying tickets costs more than selling.");
  $("ex_bal").textContent="🪙 "+fmt(coin())+"   💎 "+fmt(gem());
@@ -2486,7 +2489,7 @@ function upd(){
  $("ex_n").textContent=L2("Разница курсов — комиссия обменника: ","Rate gap is the exchange fee: ")+Math.round((1-SELL/BUY)*100)+"%";
 }
 function go(){
- if(!ready||busy)return;
+ rt();if(!ready||busy)return;
  const n=cnt();
  if(n<1)return toast(L2("Введи количество","Enter an amount"),"err");
  if(dir==="g2c"){
