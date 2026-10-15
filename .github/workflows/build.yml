@@ -1,0 +1,87 @@
+name: Build APK
+on: [workflow_dispatch]
+permissions:
+  contents: write
+concurrency:
+  group: build-apk
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore folders
+        run: |
+          # удаляем устаревшие иконки из прошлых загрузок (из-за них падал processReleaseResources)
+          rm -rf app/src/main/res/mipmap-* app/src/main/res/drawable-anydpi* 2>/dev/null || true
+          for f in app__*; do
+            d=$(echo "$f" | sed 's#__#/#g')
+            mkdir -p "$(dirname "$d")"
+            mv "$f" "$d"
+          done
+          find app -type f | grep -v '/assets/' || true
+          test -f app/src/main/assets/index.html
+      - name: Inject build number
+        run: |
+          sed -i "s#__BUILD__#${{ github.run_number }}#g; s#__REPO__#${{ github.repository }}#g" app/src/main/assets/index.html
+          grep -c "${{ github.repository }}" app/src/main/assets/index.html || true
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: 8.13 }
+      - name: Prepare signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          SECRET_STORE_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+          SECRET_ALIAS: ${{ secrets.KEY_ALIAS }}
+          SECRET_KEY_PASS: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ] && [ -n "$SECRET_STORE_PASS" ] && [ -n "$SECRET_ALIAS" ] && [ -n "$SECRET_KEY_PASS" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "KEYSTORE_PASSWORD=$SECRET_STORE_PASS" >> $GITHUB_ENV
+            echo "KEY_ALIAS=$SECRET_ALIAS" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=$SECRET_KEY_PASS" >> $GITHUB_ENV
+          else
+            echo "::warning::Secrets неполные или пустые - использую временный ключ"
+            keytool -genkeypair -keystore "$RUNNER_TEMP/release.jks" -alias tmp -keyalg RSA -keysize 2048 -validity 10000 -storepass temp1234 -keypass temp1234 -dname "CN=Crystal Altar"
+            echo "KEYSTORE_PASSWORD=temp1234" >> $GITHUB_ENV
+            echo "KEY_ALIAS=tmp" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=temp1234" >> $GITHUB_ENV
+          fi
+          echo "KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> $GITHUB_ENV
+      - name: Build release APK
+        run: gradle assembleRelease --no-daemon --stacktrace
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+      - name: Sign APK
+        run: |
+          mkdir -p out
+          SDK="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          BT=$(ls -d "$SDK"/build-tools/* | sort -V | tail -1)
+          ls app/build/outputs/apk/release/
+          SRC=app/build/outputs/apk/release/app-release-unsigned.apk
+          [ -f "$SRC" ] || SRC=app/build/outputs/apk/release/app-release.apk
+          "$BT/apksigner" sign --ks "$KEYSTORE_PATH" --ks-pass env:KEYSTORE_PASSWORD \
+            --ks-key-alias "$KEY_ALIAS" --key-pass env:KEY_PASSWORD \
+            --v4-signing-enabled false \
+            --out out/Crystal-Altar.apk "$SRC"
+          "$BT/apksigner" verify --print-certs out/Crystal-Altar.apk | head -3
+          rm -f out/*.idsig
+      - name: Put APK into site folder
+        run: |
+          mkdir -p site
+          cp out/Crystal-Altar.apk site/Crystal-Altar.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Crystal-Altar
+          path: out/Crystal-Altar.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Crystal Altar 2 (${{ github.run_number }})
+          make_latest: true
+          files: out/Crystal-Altar.apk
