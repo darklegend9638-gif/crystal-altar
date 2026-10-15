@@ -3018,7 +3018,7 @@ setInterval(()=>{if(typeof ready==="undefined"||!ready)return;
 const APP_BUILD="__BUILD__",APP_REPO="__REPO__"; /* в APK эти значения подставляет GitHub Actions при сборке */
 const REL=/^\d+$/.test(APP_BUILD);
 const UPDATE_SITE="https://crystal-altar-update.onrender.com/"; /* ссылка на страницу скачивания обновления */
-const DOWNLOAD_URL=UPDATE_SITE;
+const DOWNLOAD_URL=UPDATE_SITE+(/^[\w.-]+\/[\w.-]+$/.test(APP_REPO)?"?r="+APP_REPO:""); /* страница обновления сама берёт релизы из репозитория, где собрана игра */
 const loadedAt=Date.now();
 let base=null,shown=false,snooze=0,lastCheck=0;
 const hash=t=>{let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(36)+t.length};
