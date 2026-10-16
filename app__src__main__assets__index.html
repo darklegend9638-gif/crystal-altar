@@ -282,7 +282,6 @@ button.alt{
 #luck{background:linear-gradient(135deg,#34d399,#2dd4bf);color:#03221a;box-shadow:0 10px 24px -10px rgba(45,212,191,.8),inset 0 1px rgba(255,255,255,.5)}
 #inc{background:linear-gradient(135deg,#fbbf24,#fb923c);color:#2b1400;box-shadow:0 10px 24px -10px rgba(251,146,60,.8),inset 0 1px rgba(255,255,255,.6)}
 #luck:disabled,#inc:disabled{filter:grayscale(.55);opacity:.45}
-.abuff{display:block;margin-top:4px;font-size:12px;font-weight:800;color:inherit;opacity:.8}
 
 /* ---------- гарант (pity) ---------- */
 #pity{display:grid;gap:8px;margin-top:16px;text-align:left}
@@ -2150,7 +2149,7 @@ const BPM=116,S=60/BPM/4,N=m=>440*Math.pow(2,(m-69)/12);
 const CHD={C:[48,[60,64,67]],G:[43,[59,62,67]],A:[45,[60,64,69]],F:[41,[60,65,69]]};
 const PROG=["C","G","A","F","C","G","F","G"];
 const MEL=[[76,0,79,76,74,0,72,74],[71,0,74,71,67,0,71,74],[72,0,76,72,69,0,72,76],[77,0,76,72,74,0,72,69],[76,79,84,79,76,0,79,0],[74,79,83,79,74,0,71,74],[77,0,81,77,76,0,72,77],[74,0,79,74,71,74,79,0]];
-function init(){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return!1;ctx=new AC();master=ctx.createGain();master.gain.value=0;ctx.onstatechange=function(){if(ctx&&ctx.state==="running"){nc=ctx.currentTime+.1;unbind()}};
+function init(){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return!1;ctx=new AC();master=ctx.createGain();master.gain.value=0;ctx.onstatechange=function(){if(ctx&&ctx.state==="running"){if(nc<ctx.currentTime)nc=ctx.currentTime+.1;unbind()}};
 const cp=ctx.createDynamicsCompressor();cp.threshold.value=-18;cp.ratio.value=4;
 bus=ctx.createGain();lead=ctx.createGain();lead.connect(bus);
 const dly=ctx.createDelay(1);dly.delayTime.value=S*3;const fb=ctx.createGain();fb.gain.value=.28;const df=ctx.createBiquadFilter();df.type="lowpass";df.frequency.value=2600;const dg=ctx.createGain();dg.gain.value=.35;
@@ -2325,7 +2324,6 @@ if(k2!==_pk){_pk=k2;pk.innerHTML=(bpSel?avW(bpSel,sp?sp.avatar:"")+" "+"<b style
 const ls=$("bpg_list");ls.style.display=bpOpen?"flex":"none";
 if(bpOpen){const pl=bpPl(),k3=pl.map(p=>p.nick+(bpHas(p.nick)?"!":"")+(p.nick===bpSel?"*":"")).join("|")+LANG+"#"+ppFavSig();
 if(k3!==_lk){_lk=k3;ls.innerHTML=ppList(pl,{sel:bpSel,has:p=>bpHas(p.nick),attr:"data-bpn"});try{avWatch(ls)}catch(e){}}}else _lk=""}
-const bpMark=gTxt;
 $("bpg_pick").onclick=()=>{bpOpen=!bpOpen;if(bpOpen){_lk="";try{loadPlayers().then(()=>{_lk="";gTxt()})}catch(e){}bpLoadOwn()}gTxt()};
 $("bpg_list").onclick=e=>{const f=e.target.closest("[data-fav]");if(f){e.stopPropagation();ppToggleFav(f.dataset.fav);_lk="";gTxt();return}const b=e.target.closest("[data-bpn]");if(!b||b.disabled)return;bpSel=b.dataset.bpn;bpOpen=false;gTxt()};
 $("bpg_h").onclick=()=>window.gHistOpen&&window.gHistOpen();
@@ -2971,7 +2969,7 @@ const css=document.createElement("style");
 css.textContent='#rareFx{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.35),rgba(0,0,0,.6));animation:rfx 2.2s ease-out forwards}#rareFx b{font:800 34px var(--fh);text-shadow:0 0 24px currentColor}#rareFx span{font-size:56px}@keyframes rfx{0%{opacity:0;transform:scale(.6)}15%{opacity:1;transform:scale(1.08)}80%{opacity:1}100%{opacity:0;transform:scale(1.2)}}';
 
 document.head.appendChild(css);
-function fx(r){const d=document.createElement("div");d.id="rareFx";d.style.color=r.c;d.innerHTML=`<span>✨</span><b>${L2(r.ru,r.n)}!</b>`;document.body.appendChild(d);try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}setTimeout(()=>d.remove(),2300)}
+function fx(r){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}}
 let lr=null,lb=null;const ix=n=>R.findIndex(r=>r.n===n),HI=Math.min(ix("Primordial"),ix("Omnipotent"),ix("Absolute"));
 setInterval(()=>{if(typeof ready==="undefined"||!ready)return;
   if(lr===null){lr=S.rolls;lb=S.best;return}
@@ -3336,7 +3334,6 @@ let gP=null,gTo="",gBusy=0,gOwn=null;
 const gm=()=>$("giftModal"),close=()=>{gm().classList.remove("show");gP=null;gTo="";gBusy=0;gOwn=null};
 function gname(g){return T(g.ru[0],g.en[0])}
 function gHas(nick,p){const k=String(nick||"").toLowerCase();if(!k||!gP)return false;if(gOwn&&gOwn.has(k))return true;if(gP.k==="vip"){if(window.VIPS&&window.VIPS[k])return true;if(p&&(p.vip===true||p.vip===1||p.vip==="1"||p.vip==="t"||p.vip==="true"))return true}return false}
-const gOwnTxt=()=>T("\u0423 \u0438\u0433\u0440\u043e\u043a\u0430 \u0443\u0436\u0435 \u0435\u0441\u0442\u044c","Already owned");
 function drawList(q){
   q=String(q||"").trim().toLowerCase();
   const me0=me&&me.nick?me.nick.toLowerCase():"";
