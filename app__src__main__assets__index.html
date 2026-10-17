@@ -3294,7 +3294,7 @@ document.querySelectorAll('input[type="password"]').forEach(eye);
 const hideAll=()=>all.forEach(i=>i.hidePw&&i.hidePw());
 document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest(".pclose,#reg_ok,#s_pb,#t_reg,#t_in"))setTimeout(hideAll,0)},true);
 document.addEventListener("visibilitychange",()=>{document.hidden&&hideAll()});
-})();</script><style id="stabcss">html.pnl .ring,html.pnl .ring::after,html.pnl #bgfx i,html.pnl .rbtn::after,html.pnl h1{animation-play-state:paused!important}html.pnl #fxl,html.pnl #flash{display:none!important}</style>
+})();</script><style id="stabcss">html.pnl #fxl,html.pnl #flash{display:none!important}</style>
 <script id="stabjs">(function(){try{
 var pw=document.getElementById("pwrap"),de=document.documentElement;
 if(pw)new MutationObserver(function(){de.classList.toggle("pnl",pw.classList.contains("open"))}).observe(pw,{attributes:true,attributeFilter:["class"]});
@@ -3650,4 +3650,10 @@ button,.pclose,#menuBtn{touch-action:manipulation}
 #clanp button:disabled,#reg button:disabled{opacity:.4!important;filter:saturate(.35)!important}
 </style>
 <script>setInterval(function(){try{if(document.hidden)return;var v=fmt(S.coins||0);document.querySelectorAll(".cl-have").forEach(function(e){if(e.textContent!==v)e.textContent=v})}catch(_){}},400)</script>
+<script id="bdtap">(function(){var d=null;
+function tgt(e){var t=e.target;return t&&(t.id==="pwrap"||(t.classList&&t.classList.contains("confirm-modal")))?t:null}
+document.addEventListener("touchstart",function(e){var t=tgt(e),p=e.touches&&e.touches[0];d=t&&p?{t:t,x:p.clientX,y:p.clientY}:null},{passive:true,capture:true});
+document.addEventListener("touchmove",function(e){var p=e.touches&&e.touches[0];if(d&&p&&(Math.abs(p.clientX-d.x)>10||Math.abs(p.clientY-d.y)>10))d=null},{passive:true,capture:true});
+document.addEventListener("touchend",function(e){var t=tgt(e);if(d&&t&&t===d.t){e.preventDefault();d=null;t.click();return}d=null},{passive:false,capture:true});
+})();</script>
 </body> </html>
