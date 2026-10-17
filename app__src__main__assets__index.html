@@ -931,6 +931,11 @@ html body button.alt:not(.pclose):not(.chip),html body .pbox button.alt:not(.pcl
  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -4px 0 rgba(0,0,0,.28),0 6px 14px -10px rgba(0,0,0,.7)!important}
 html body #upgBtn{box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -4px 0 rgba(0,0,0,.2)!important}
 html body button:disabled{box-shadow:none!important}
+/* выбранная аватарка подсвечивается */
+html body #reg button.avb.sel,html body #setp button.avb.sel,html body #pwrap button.avb.sel,html body button.avb.sel{
+ position:relative;background:linear-gradient(180deg,rgba(251,191,36,.38),rgba(251,191,36,.16))!important;border:2px solid #fbbf24!important;
+ box-shadow:0 0 0 2px rgba(251,191,36,.35),0 0 18px rgba(251,191,36,.6),inset 0 1px 0 rgba(255,255,255,.35)!important}
+html body button.avb.sel::after{content:"✓";position:absolute;top:-6px;right:-5px;width:16px;height:16px;border-radius:50%;background:#fbbf24;color:#1a1200;font:900 11px/16px var(--fh,sans-serif);text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.5)}
 /* эффект нажатия: кнопка чуть уменьшается */
 html body button{transition:transform .09s ease-out!important}
 html body button:active:not(:disabled),html body .pbox button:active:not(:disabled),html body #pwrap button:active:not(:disabled),html body button.alt:active:not(:disabled),html body #menu button:active:not(:disabled),html body .modal-box button:active:not(:disabled){transform:scale(.94)!important}
@@ -3591,5 +3596,46 @@ function tgt(e){var t=e.target;return t&&(t.id==="pwrap"||(t.classList&&t.classL
 document.addEventListener("touchstart",function(e){var t=tgt(e),p=e.touches&&e.touches[0];d=t&&p?{t:t,x:p.clientX,y:p.clientY}:null},{passive:true,capture:true});
 document.addEventListener("touchmove",function(e){var p=e.touches&&e.touches[0];if(d&&p&&(Math.abs(p.clientX-d.x)>10||Math.abs(p.clientY-d.y)>10))d=null},{passive:true,capture:true});
 document.addEventListener("touchend",function(e){var t=tgt(e);if(d&&t&&t===d.t){e.preventDefault();d=null;t.click();return}d=null},{passive:false,capture:true});
+})();</script>
+<script id="fliptap">(function(){
+/* Страховка от «съеденного» первого тапа: после прокрутки окна (инерция), при перерисовке списка
+   под пальцем или сбое браузера клик не приходит. Если это был обычный короткий тап и
+   нативный click не пришёл — отправляем его сами. Дублей нет: проверяем, был ли click. */
+var lastClick=0,tp=null;
+var SEL='button,a[href],summary,label,[role=button],[onclick],[data-n],[data-a],[data-c],[data-f],[data-fm],[data-tq],[data-ta],[data-rf],[data-tt],[data-st],[data-ex],[data-tp],[data-tw],[data-rv],[data-up],.ti,.hrow,.chip';
+document.addEventListener("click",function(){lastClick=Date.now()},true);
+document.addEventListener("touchstart",function(e){
+ if(!e.touches||e.touches.length!==1){tp=null;return}
+ var t=e.touches[0];tp={x:t.clientX,y:t.clientY,t:Date.now(),el:e.target}
+},{passive:true,capture:true});
+document.addEventListener("touchmove",function(e){
+ var t=e.touches&&e.touches[0];
+ if(tp&&t&&(Math.abs(t.clientX-tp.x)>12||Math.abs(t.clientY-tp.y)>12))tp=null
+},{passive:true,capture:true});
+document.addEventListener("touchcancel",function(){tp=null},{passive:true,capture:true});
+function pick(el){
+ if(!el||!el.closest)return null;
+ var n=el.closest(SEL);if(n)return n;
+ /* делегированные обработчики: ищем ближайший предок с курсором-указателем внутри окна */
+ if(!el.closest("#pwrap,.confirm-modal,#reg"))return null;
+ for(var i=0,x=el;x&&x!==document.body&&i<6;i++,x=x.parentElement){
+  try{if(getComputedStyle(x).cursor==="pointer")return x}catch(_){}
+ }
+ return null
+}
+document.addEventListener("touchend",function(e){
+ var p=tp;tp=null;
+ if(!p||Date.now()-p.t>500)return;
+ var c=e.changedTouches&&e.changedTouches[0],x=c?c.clientX:p.x,y=c?c.clientY:p.y;
+ var t0=Date.now();
+ setTimeout(function(){
+  if(lastClick>=t0-30)return;              /* нативный клик пришёл — ничего не делаем */
+  var el=document.elementFromPoint(x,y)||p.el;
+  if(!el||/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName))return;
+  var n=pick(el);
+  if(!n||n.disabled||n.getAttribute("aria-disabled")==="true")return;
+  n.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,view:window,clientX:x,clientY:y}))
+ },70)
+},{passive:true,capture:true});
 })();</script>
 </body> </html>
