@@ -1089,10 +1089,10 @@ async function rpc(e,t,n){
   if(ws||!uid||!SB_URL)return;
   try{ws=new WebSocket(SB_URL.replace(/^http/,"ws")+"/realtime/v1/websocket?apikey="+encodeURIComponent(SB_KEY)+"&vsn=1.0.0")}catch{ws=null;return}
   const w=ws;
-  w.onopen=()=>{rc=0;w.send(JSON.stringify({topic:"realtime:g2ping",event:"phx_join",ref:"1",join_ref:"1",payload:{config:{broadcast:{ack:!1,self:!1},presence:{key:""},postgres_changes:[{event:"*",schema:"public",table:"g2_ping",filter:"uid=eq."+uid},{event:"*",schema:"public",table:"g2_ping",filter:"uid=eq.all"}],private:!1},access_token:SB_KEY}}));lastRx=Date.now();hb=setInterval(()=>{if(Date.now()-lastRx>55e3){try{w.close()}catch{}return}try{w.send(JSON.stringify({topic:"phoenix",event:"heartbeat",payload:{},ref:"h"}))}catch{}},2e4)};
+  w.onopen=()=>{rc=0;w.send(JSON.stringify({topic:"realtime:g2ping",event:"phx_join",ref:"1",join_ref:"1",payload:{config:{broadcast:{ack:!1,self:!1},presence:{key:""},postgres_changes:[{event:"*",schema:"public",table:"g2_ping",filter:"uid=eq."+uid},{event:"*",schema:"public",table:"g2_ping",filter:"uid=eq.00000000-0000-0000-0000-000000000000"}],private:!1},access_token:SB_KEY}}));lastRx=Date.now();hb=setInterval(()=>{if(Date.now()-lastRx>55e3){try{w.close()}catch{}return}try{w.send(JSON.stringify({topic:"phoenix",event:"heartbeat",payload:{},ref:"h"}))}catch{}},2e4)};
   w.onmessage=m=>{lastRx=Date.now();let d;try{d=JSON.parse(m.data)}catch{return}
    if(d.event==="phx_reply"&&d.topic==="realtime:g2ping"){const ok=d.payload&&d.payload.status==="ok";window.__rtOn=ok;ok&&kick("all")}
-   else if(d.event==="postgres_changes"){let k="all",rv=null;try{const r=d.payload.data.record;k=r.kind||"all";rv=r.v}catch{}if(k==="save"&&rv!=null&&typeof S==="object"&&S&&+rv===+S._v)return;kick(k)}};
+   else if(d.event==="postgres_changes"){let k="all";try{k=d.payload.data.record.kind||"all"}catch{}kick(k)}};
   const end=()=>{if(ws!==w)return;ws=null;window.__rtOn=!1;clearInterval(hb);clearTimeout(tmo);tmo=setTimeout(open,Math.min(3e4,1e3*Math.pow(2,rc++)))};
   w.onclose=end;w.onerror=()=>{try{w.close()}catch{}}
  }
