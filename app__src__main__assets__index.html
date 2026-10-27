@@ -4866,4 +4866,61 @@ for(var w=0;w<U.length;w++){if(M&&T&&M[w])for(var g=0;g<2;g++){if(M[w][g]>=0)T[M
 try{window.gxRender&&window.gxRender()}catch(e){}try{typeof render==="function"&&render()}catch(e){}
 setTimeout(function(){try{window.gxRender&&window.gxRender();render()}catch(e){}},900);
 })();</script>
+<style id="upd-css">
+#updM{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(2,4,10,.8);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#updM.show{display:flex}
+#updM .ub{width:100%;max-width:360px;padding:22px 18px;border-radius:26px;text-align:center;color:#fff;background:radial-gradient(120% 60% at 50% -8%,rgba(168,85,247,.38),transparent 62%),linear-gradient(180deg,#1a1034,#0d0a1f);border:1px solid rgba(180,130,255,.55);box-shadow:0 30px 80px -10px rgba(0,0,0,.85)}
+#updM .ut{font-weight:800;font-size:20px;margin-bottom:8px}
+#updM .ux{font-size:14px;opacity:.8;white-space:pre-line;margin-bottom:6px}
+#updM .uv{font-size:12px;opacity:.55;margin-bottom:14px}
+#updM .ur{display:flex;gap:10px}#updM .ur button{flex:1}
+</style>
+<div id="updM"><div class="ub"><div class="ut" id="updT"></div><div class="ux" id="updX"></div><div class="uv" id="updV"></div><div class="ur"><button class="alt" id="updNo"></button><button id="updGo"></button></div></div></div>
+<script id="app-update">(function(){
+"use strict";
+/* ===== НАСТРОЙКА ===== */
+var APP_BUILD=1;                    /* НОМЕР сборки этого приложения: в каждом релизе увеличивай, он должен совпадать с числом в конце тега релиза (v42 → 42) */
+var REPO="darklegend9638-gif/crystal-altar";        /* GitHub-репозиторий с релизами */
+var UPDATE_PAGE="https://crystal-altar-update.onrender.com";  /* страница скачивания APK */
+var CHECK_EVERY=30*60*1000;         /* как часто проверять, мс */
+/* Данные берутся из последнего релиза GitHub: тег с номером в конце (например v42), описание релиза = «что нового» */
+var $=function(i){return document.getElementById(i)};
+var ru=function(){try{return typeof LANG==="undefined"||LANG!=="en"}catch(e){return true}};
+var T=function(a,b){return ru()?a:b};
+var cur=null,shown=false;
+function hide(){$("updM").classList.remove("show")}
+function show(d){
+ if(shown)return;
+ var skip="";try{skip=localStorage.getItem("upd-skip")||""}catch(e){}
+ if(!d.force&&skip===String(d.version))return;
+ shown=true;cur=d;
+ $("updT").textContent="🚀 "+T("Доступно обновление","Update available");
+ $("updX").textContent=d.notes||T("Вышла новая версия игры.","A new version of the game is out.");
+ $("updV").textContent=T("Ваша сборка: ","Your build: ")+APP_BUILD+" → "+d.version;
+ $("updGo").textContent=T("Обновить","Update");
+ $("updNo").textContent=T("Позже","Later");
+ $("updNo").style.display=d.force?"none":"";
+ $("updM").classList.add("show");
+}
+$("updNo").onclick=function(){try{localStorage.setItem("upd-skip",String(cur.version))}catch(e){}shown=false;hide()};
+$("updGo").onclick=function(){
+ var u=cur&&cur.url;
+ try{
+  if(u){
+   if(window.AndroidBridge&&typeof AndroidBridge.openUrl==="function"){AndroidBridge.openUrl(u);return}
+   window.open(u,"_blank");return}
+ }catch(e){}
+ try{location.href=location.pathname+"?v="+Date.now()}catch(e){location.reload()}
+};
+function check(){
+ if(document.hidden)return;
+ fetch("https://api.github.com/repos/"+REPO+"/releases/latest",{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
+  if(!j)return;var m=/(\d+)\s*$/.exec(j.tag_name||"");if(!m)return;var n=+m[1];
+  if(n>APP_BUILD)show({version:n,url:UPDATE_PAGE,notes:String(j.body||"").replace(/\r/g,"").trim().slice(0,600),force:false});
+ }).catch(function(){});
+}
+setTimeout(check,4000);setInterval(check,CHECK_EVERY);
+document.addEventListener("visibilitychange",function(){!document.hidden&&check()});
+window.__checkUpdate=check;
+})();</script>
 </body> </html>
