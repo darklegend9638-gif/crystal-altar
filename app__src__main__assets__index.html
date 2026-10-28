@@ -1022,7 +1022,7 @@ function rbReq(n){return{coins:3e6*Math.pow(3,n),luck:RBLUCK,inc:MAXINC,best:RB_
 function rbOk(n){const q=rbReq(n);return S.coins>=q.coins&&S.luck>=q.luck&&S.inc>=q.inc&&S.best>=q.best}
 function gpHas(k){return!!(S.gp&&S.gp[k])}function gpMul(){return gpHas("coin")?2:1}function gpLuck(){return(gpHas("luck")?3:0)+(gpHas("vip")?1:0)}function gpDisc(){return gpHas("disc")?.85:1}
 function vipTag(x){try{const v=x&&(x.vip===true||x.vip===1||x.vip==="1"||x.vip==="t"||x.vip==="true"||!!(x.nick&&window.VIPS&&window.VIPS[String(x.nick).toLowerCase()])),own=!!(me&&x&&x.nick&&String(x.nick).toLowerCase()===String(me.nick).toLowerCase()&&gpHas("vip"));return v||own?'<span class="vtag">VIP</span>':""}catch(e){return""}}
-function clanMul(){return(CLAN?1+.03*(CLAN.level||0):1)*rbMul()*gpMul()*(window.gxMul?gxMul():1)*(window.cuMul?cuMul():1)}var CPK={luck:0,inc:0,gem:0};function clanLuck(){return(CLAN&&CPK?.5*(CPK.luck||0):0)+rbLuck()+gpLuck()}function clanInc(){return(CLAN&&CPK?1+.05*(CPK.inc||0):1)*(gpHas("vip")?1.25:1)}function clanGem(){return CLAN&&CPK?1+.05*(CPK.gem||0):1}/* ==========================================================================================
+function clanMul(){return(CLAN?1+.03*(CLAN.level||0):1)*rbMul()*gpMul()*(window.gxMul?gxMul():1)*(window.cuMul?cuMul():1)}var CPK={luck:0,inc:0,gem:0};function clanLuck(){return(CLAN&&CPK?.5*(CPK.luck||0):0)+rbLuck()+gpLuck()+(window.petLuck?petLuck():0)}function clanInc(){return(CLAN&&CPK?1+.05*(CPK.inc||0):1)*(gpHas("vip")?1.25:1)}function clanGem(){return CLAN&&CPK?1+.05*(CPK.gem||0):1}/* ==========================================================================================
    СЛОЖНОСТЬ ЭКОНОМИКИ — чем меньше число, тем труднее получать монеты. 1 = как раньше.
    roll — множитель монет за предметы с роллов;  inc — множитель пассивного дохода (монеты в секунду).
    Покупка за реальные деньги и промокоды этим не затрагиваются.
@@ -4827,7 +4827,7 @@ window.__checkUpdate=check;
 })();</script>
 <style id="bundles-css">#bnl{display:grid;gap:12px;margin-top:12px}#bnl .ti{margin:0!important;padding:14px!important;border-radius:22px!important;gap:14px!important;border:1px solid rgba(255,255,255,.12)!important;background:linear-gradient(155deg,rgba(255,255,255,.09),rgba(255,255,255,.02) 60%)!important}#bnl .ti .ic{width:58px!important;height:58px;flex:none;display:grid;place-items:center;font-size:32px!important;border-radius:18px;background:linear-gradient(145deg,#a855f7,#4c1d95);box-shadow:0 10px 24px -8px #a855f7}#bnl .ti .tx span{display:block;margin-top:3px;font-size:12px!important;line-height:1.35;color:#b9b2d6!important}#bnl .ti button{flex:none;border-radius:16px!important;padding:12px 14px!important;white-space:nowrap;background:linear-gradient(135deg,#ffd75e,#ff8a3d 60%,#ff4d8d)!important;color:#2a1200!important}#bnl .ti button:disabled{background:rgba(255,255,255,.08)!important;color:var(--mute)!important}#bnl .bnold{text-decoration:line-through;opacity:.6;margin-right:6px;font-size:12px}#bnl .bnoff{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:8px;background:#34d399;color:#022c1f;font-size:11px}</style>
 <script id="bundles-js">(function(){"use strict";
-window.cpDmg=function(){return gpHas("dmg")?2:1};
+
 var BN=[
 {k:"start",e:"🎁",ru:["Стартовый набор","Золотой пасс + Пасс удачи + Пасс билетов"],en:["Starter Bundle","Golden + Luck + Ticket passes"],p:["coin","luck","daily"],off:.15},
 {k:"fight",e:"⚔️",ru:["Набор бойца","Пасс силы + Пасс мастера + Двойная гача"],en:["Fighter Bundle","Power + Master passes + Dual Gacha"],p:["dmg","disc","dual"],off:.2},
@@ -4846,5 +4846,22 @@ S.gem-=q.price;b.p.forEach(function(k){(S.gp||(S.gp={}))[k]=1});
 render();save();pushSoon();renderShop();window.gpChanged&&window.gpChanged(1);
 toast(L2("Куплен бандл: ","Bundle bought: ")+L2(b.ru[0],b.en[0]),"ok")});
 try{renderBN()}catch(e){}
+})();</script>
+<script id="petbuff-js">(function(){"use strict";
+/* Бафф питомцев: за каждого питомца мира (редкость r) +0.04 уровня удачи и +1% урона за (r+1); яйца-питомцы (S.pt) считаются так же */
+function sumR(){var t=0;try{if(S.wp&&typeof S.wp==="object")for(var w in S.wp){var a=S.wp[w];if(Array.isArray(a))a.forEach(function(o,r){if(o)t+=r+1})}
+(S.pt||[]).forEach(function(id){var q=PETS.find(function(o){return o.id===id});if(q)t+=q.r+1})}catch(e){}return t}
+window.petLuck=function(){return sumR()*.04};
+window.petDmg=function(){return 1+sumR()*.01};
+window.cpDmg=function(){return(gpHas("dmg")?2:1)*petDmg()};
+/* Подарок при первом входе: Nika (Астрал, 3 мир) + 💎 тикеты + монеты */
+var GIFT_GEM=100,GIFT_COINS=100000;
+var t=setInterval(function(){if(typeof ready==="undefined"||!ready||typeof S==="undefined"||!S||S.wgift)return;
+clearInterval(t);
+if(!S.wp||typeof S.wp!=="object"||Array.isArray(S.wp))S.wp={};
+var a=S.wp[2];if(!Array.isArray(a)||a.length!==9)a=S.wp[2]=[0,0,0,0,0,0,0,0,0];a[8]=1;
+S.gem=(S.gem||0)+GIFT_GEM;S.coins=(S.coins||0)+GIFT_COINS;S.wgift=1;
+try{render()}catch(e){}save();pushSoon();
+toast("🎁 "+L2("Подарок: питомец Nika (Астрал, 3 мир), ","Gift: Nika pet (Astral, World 3), ")+"💎"+GIFT_GEM+" · 🪙"+fmt(GIFT_COINS),"ok")},500);
 })();</script>
 </body> </html>
