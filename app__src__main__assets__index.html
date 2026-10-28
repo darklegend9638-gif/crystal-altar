@@ -1488,7 +1488,7 @@ $("topw").onclick = e => {
 };
 $("topBtn").onclick = () => { topLW = 0; if (topTab !== "g") topTab = "c" + topLW; topTabs(); topShow(); openPanel("topp"); loadTop(); };
 /* пока топ открыт — обновляется сам каждые 5 секунд */
-setInterval(() => { $("topp").style.display === "block" && !document.hidden && loadTop(); }, 5000);
+setInterval(() => { $("topp").style.display === "block" && !document.hidden && loadTop(); }, 1000);
 document.addEventListener("visibilitychange", () => { !document.hidden && $("topp").style.display === "block" && loadTop(); });
 setInterval(__one(() => { return !document.hidden && TOKEN && ready && topTries < 3 && !TOPC["c0"] && topPrefetch(); }), 3000);
 const IC=n=>`<svg class="ico ei" aria-hidden="true"><use href="#i-${n}"/></svg>`,EIM={"🏆":"top","🪙":"coin","💎":"gem","🎲":"dice","🍀":"clover","💰":"income","⭐":"star","🐾":"paw","📚":"book","🛡":"shield","🔄":"rebirth"},EI=t=>esc(t).replace(/(🏆|🪙|💎|🎲|🍀|💰|⭐|🐾|📚|🛡|🔄)\uFE0F?/g,(m,g)=>IC(EIM[g]));
@@ -3953,7 +3953,7 @@ window.vipLoad=async function(force){
   }finally{busy=0}
 };
 setTimeout(function(){window.vipLoad(1)},1500);
-setInterval(function(){document.hidden||window.vipLoad()},4000);
+setInterval(function(){document.hidden||window.vipLoad()},1000);
 document.addEventListener("visibilitychange",function(){document.hidden||window.vipLoad()});
 var tb=document.getElementById("topBtn");tb&&tb.addEventListener("click",function(){window.vipLoad(1)});
 /* вспышка редкости: после окончания (или отмены при display:none) снимаем .go,
