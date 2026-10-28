@@ -2488,12 +2488,14 @@ b.disabled=true;await act(k,n);draw()});
 (document.getElementById("frb")||{}).onclick=()=>{if(!TOKEN||!me)return toast(L("Сначала войди в аккаунт","Log in first"),"err");skeleton();openPanel("frp");draw();frLoad(true);try{loadPlayers().then(drawCand)}catch(e){}};
 /* кнопка «в друзья» в профиле игрока */
 window.frProfileBtn=nick=>{const k=key(nick);let t,c="alt",dis="";
-if(FR.set.has(k)){t="✓ "+L("В друзьях","Friends");dis="disabled"}
+if(FR.set.has(k)){return '<div class="frbadge">🤝 '+L("Твой друг","Your friend")+'</div><button class="alt" data-frp-rm="'+esc(nick)+'" style="margin-top:8px;border-color:var(--c5)!important;color:var(--c5)!important">🗑 '+L("Удалить из друзей","Remove friend")+'</button>'}
 else if(FR.outgoing.some(x=>key(x.nick)===k)){t="⏳ "+L("Заявка отправлена","Request sent");dis="disabled"}
 else if(FR.incoming.some(x=>key(x.nick)===k)){t="✔ "+L("Принять заявку","Accept request");c=""}
 else t="➕ "+L("В друзья","Add friend");
 return `<button class="${c}" data-frp="${esc(nick)}" style="margin-top:8px" ${dis}>${t}</button>`};
-window.frProfileBind=(root,nick,redraw)=>{const b=root.querySelector("[data-frp]");if(b)b.onclick=async()=>{b.disabled=true;const inc=FR.incoming.some(x=>key(x.nick)===key(nick));await act(inc?"ok":"add",nick);redraw()};
+window.frIsFriend=nick=>FR.set.has(key(nick));window.frLoadPub=()=>frLoad(false);
+const FRBIND=(root,nick,redraw)=>{const rb=root.querySelector("[data-frp-rm]");if(!rb)return;let armed=0;rb.onclick=async()=>{if(!armed){armed=1;rb.textContent="⚠️ "+L("Нажми ещё раз","Tap again");setTimeout(()=>{if(rb.isConnected&&!rb.disabled){armed=0;rb.textContent="🗑 "+L("Удалить из друзей","Remove friend")}},3000);return}rb.disabled=true;const ok=await act("rm",nick);if(ok)toast(L("Удалён из друзей: ","Removed from friends: ")+nick,"ok");redraw()}};
+window.frProfileBind=(root,nick,redraw)=>{FRBIND(root,nick,redraw);const b=root.querySelector("[data-frp]");if(b)b.onclick=async()=>{b.disabled=true;const inc=FR.incoming.some(x=>key(x.nick)===key(nick));await act(inc?"ok":"add",nick);redraw()};
 frLoad(false).then(ch=>{if(ch)redraw()})};
 badge();setTimeout(()=>frLoad(false),3000);setInterval(()=>{document.hidden||frLoad(false)},3e4);
 })();</script>
@@ -2587,7 +2589,7 @@ function drawList(){
   const f=q.trim().toLowerCase();
   const arr=LST.map((x,i)=>Object.assign({_r:i+1},x)).filter(x=>!f||String(x.nick).toLowerCase().includes(f)).slice(0,60);
   const l=vb.querySelector("#vl");if(!l)return;
-  l.innerHTML=arr.length?arr.map(x=>'<button class="alt vi'+(x._r<=3?' r'+x._r:'')+'" data-pn="'+esc(x.nick)+'"><em class="rk" style="font-style:normal">'+(x._r<=3?['🥇','🥈','🥉'][x._r-1]:'#'+x._r)+'</em>'+avW(x.nick,x.avatar)+'<b>'+esc(x.nick)+'</b><span>'+IC("coin")+nf(x.coins)+'</span></button>').join(""):'<div style="color:var(--mute);padding:8px">'+L2("Никого не найдено","Nobody found")+'</div>';
+  l.innerHTML=arr.length?arr.map(x=>'<button class="alt vi'+(x._r<=3?' r'+x._r:'')+'" data-pn="'+esc(x.nick)+'"><em class="rk" style="font-style:normal">'+(x._r<=3?['🥇','🥈','🥉'][x._r-1]:'#'+x._r)+'</em>'+avW(x.nick,x.avatar)+'<b>'+esc(x.nick)+(window.frIsFriend&&window.frIsFriend(x.nick)?' 🤝':'')+'</b><span>'+IC("coin")+nf(x.coins)+'</span></button>').join(""):'<div style="color:var(--mute);padding:8px">'+L2("Никого не найдено","Nobody found")+'</div>';
   avWatch(l);
 }
 function showList(){
@@ -2644,7 +2646,7 @@ async function showProfile(nick){
 async function openProfiles(){
   if(!TOKEN||!me)return toast(L2("Сначала войди в аккаунт","Log in first"),"err");
   q="";showList();box.classList.add("open");
-  await loadList();if(box.classList.contains("open")&&vb.querySelector("#vl"))drawList();
+  await loadList();try{await window.frLoadPub()}catch(e){}if(box.classList.contains("open")&&vb.querySelector("#vl"))drawList();
 }
 const pb=document.getElementById("profb");if(pb)pb.addEventListener("click",openProfiles);
 window.openPlayerProfile=showProfile;
@@ -4889,8 +4891,8 @@ try{render()}catch(e){}save();pushSoon();
 toast("🎁 "+L2("Подарок: питомец Nika (Астрал, 3 мир), ","Gift: Nika pet (Astral, World 3), ")+"💎"+GIFT_GEM+" · 🪙"+fmt(GIFT_COINS),"ok")},500);
 })();</script>
 <style id="patch-v3">
-html.pl,body.pl{overflow:hidden!important;overscroll-behavior:none;touch-action:none}
-body.pl #pwrap,body.pl #pwrap .pbox,body.pl #vp,body.pl #vp .vb{touch-action:pan-y}#vp,#vp .vb{overscroll-behavior:contain}
+html.pl,body.pl{overflow:hidden!important;overscroll-behavior:none}
+body.pl #pwrap,body.pl #pwrap .pbox,body.pl #vp,body.pl #vp .vb,body.pl #reg,body.pl .confirm-modal,body.pl #updM,body.pl #selPop{touch-action:pan-y}#vp,#vp .vb{overscroll-behavior:contain}
 #pwrap{overscroll-behavior:contain}
 
 #vp{background:radial-gradient(120% 80% at 50% 0%,rgba(76,41,160,.38),rgba(4,3,14,.86) 70%)!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
@@ -4899,6 +4901,7 @@ body.pl #pwrap,body.pl #pwrap .pbox,body.pl #vp,body.pl #vp .vb{touch-action:pan
 #vp .vr{text-align:left}#vp .vav{margin-left:0}
 #vp .vx{position:absolute;top:12px;right:12px;width:38px!important;height:38px;margin:0!important;padding:0;display:grid;place-items:center;border-radius:50%!important;background:rgba(255,255,255,.07)!important;border:1px solid var(--w-line)!important}
 #vp .vx svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+#vp .frbadge{display:inline-block;margin-top:8px;padding:6px 14px;border-radius:999px;font:800 13px var(--fb);color:#022c1f;background:linear-gradient(135deg,#34d399,#10b981)}
 #vp .vsr{background:rgba(6,9,22,.75)!important;border:1px solid rgba(255,255,255,.12)!important;color:var(--text)!important}
 #vp .vsr:focus{outline:none;border-color:var(--acc)!important;box-shadow:0 0 0 3px rgba(45,212,191,.18)}
 #vp .vi,#vp .vs{background:linear-gradient(150deg,var(--w-card1),var(--w-card2))!important;border:1px solid var(--w-line)!important;border-radius:18px!important;box-shadow:0 10px 26px -18px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.07)!important}
@@ -4920,22 +4923,24 @@ window.capAll=function(){try{if(S.tok&&typeof S.tok==="object")for(var _k in S.t
 }catch(e){}};
 setInterval(capAll,500);
 /* no scrolling under open menus */
-var pw=document.getElementById("pwrap"),vp=document.getElementById("vp");
-function isOpen(){return pw.classList.contains("open")||(vp&&vp.classList.contains("open"))}
-function sync(){var o=isOpen();document.documentElement.classList.toggle("pl",o);document.body.classList.toggle("pl",o)}
-if(pw){var mo=new MutationObserver(sync);mo.observe(pw,{attributes:true,attributeFilter:["class"]});if(vp)mo.observe(vp,{attributes:true,attributeFilter:["class"]});sync();
- var sy=0;
- document.addEventListener("touchstart",function(e){sy=e.touches[0].clientY},{passive:true});
- document.addEventListener("touchmove",function(e){
-  if(!isOpen())return;
-  var el=e.target,sc=null;
-  while(el&&el!==document.body){if(el.nodeType===1&&el.scrollHeight>el.clientHeight+1){var oy=getComputedStyle(el).overflowY;if(oy==="auto"||oy==="scroll"){sc=el;break}}el=el.parentNode}
-  if(!sc||!(pw.contains(sc)||(vp&&vp.contains(sc)))){e.preventDefault();return}
-  var dy=e.touches[0].clientY-sy;
-  if((sc.scrollTop<=0&&dy>0)||(sc.scrollTop+sc.clientHeight>=sc.scrollHeight-1&&dy<0))e.preventDefault();
- },{passive:false});
- document.addEventListener("wheel",function(e){if(isOpen()&&!e.target.closest(".pbox,.vb"))e.preventDefault()},{passive:false});
-}
+var OVS="#pwrap,#vp,#reg,.confirm-modal,#updM,#selPop";
+function vis(el){try{var s=getComputedStyle(el);return s.display!=="none"&&s.visibility!=="hidden"&&+s.opacity>0.01&&s.pointerEvents!=="none"}catch(e){return false}}
+function openOvs(){var l=document.querySelectorAll(OVS),r=[];for(var i=0;i<l.length;i++)if(vis(l[i]))r.push(l[i]);return r}
+function openOv(){var r=openOvs();return r.length?r[0]:null}
+function inAny(r,sc){for(var i=0;i<r.length;i++)if(r[i].contains(sc))return true;return false}
+function sync(){var o=!!openOv();document.documentElement.classList.toggle("pl",o);document.body.classList.toggle("pl",o)}
+setInterval(sync,150);sync();
+var sy=0;
+document.addEventListener("touchstart",function(e){sy=e.touches[0].clientY},{passive:true});
+document.addEventListener("touchmove",function(e){
+ var ovs=openOvs();if(!ovs.length)return;
+ var el=e.target,sc=null;
+ while(el&&el!==document.body){if(el.nodeType===1&&el.scrollHeight>el.clientHeight+1){var oy=getComputedStyle(el).overflowY;if(oy==="auto"||oy==="scroll"){sc=el;break}}el=el.parentNode}
+ if(!sc||!inAny(ovs,sc)){e.preventDefault();return}
+ var dy=e.touches[0].clientY-sy;
+ if((sc.scrollTop<=0&&dy>0)||(sc.scrollTop+sc.clientHeight>=sc.scrollHeight-1&&dy<0))e.preventDefault();
+},{passive:false});
+document.addEventListener("wheel",function(e){var ovs=openOvs();if(!ovs.length)return;var el=e.target,sc=null;while(el&&el!==document.body){if(el.nodeType===1&&el.scrollHeight>el.clientHeight+1){var oy=getComputedStyle(el).overflowY;if(oy==="auto"||oy==="scroll"){sc=el;break}}el=el.parentNode}if(!sc||!inAny(ovs,sc))e.preventDefault()},{passive:false});
 /* admin: gacha / dungeon tokens */
 try{
  var sel=document.getElementById("a_tw");
