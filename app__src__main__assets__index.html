@@ -1107,7 +1107,27 @@ setInterval(__one(()=>{if(!document.hidden)return push()}),1000),document.addEve
    Можно давать несколько типов сразу:  ex_all: { luck: 2, gain: 5 }
    Чтобы убрать буст — удалите строку этого титула.
    ========================================================================================== */
-const SUF=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"],fmt=e=>{if(e<1e4)return Math.floor(e).toString();let t=Math.floor(Math.log10(e)/3),n=e/Math.pow(1e3,t);return+n.toFixed(2)>=1e3&&(t++,n/=1e3),t>=SUF.length?e.toExponential(2):+n.toFixed(2)+SUF[t]};var LK=l=>"+"+(+(LUCK_BASE+l*LUCK_STEP*100).toFixed(1)),luckCost=()=>Math.floor(2000*(window.wCm?wCm():1)*Math.pow(1.9,S.luck)*(ev().disc||1)*rbDisc()),weights=e=>{const t=e===void 0?ev():{};e===void 0&&(e=(S.luck+clanLuck()+(window.dgLuck?dgLuck():0))*(t.lk||1)+(t.la||0));/* Удача по таблицам из игры: +8 (старт), +110.7, +423.7. Лог-лог интерполяция по M=1+удача%/100, после +423.7 рост вдвое медленнее, Common = остаток */ const u=Math.log(1+(LUCK_BASE+e*LUCK_STEP*100)/100),U0=Math.log(1.08),U1=Math.log(2.107),U2=Math.log(5.237),ext=A=>R.map((o,i)=>i<A.length?A[i]:A[A.length-1]*o.w/R[A.length-1].w),P0=R.map((o,a)=>a<6?o.w:a===6?.004:a===7?4e-4:1.01e-5),P1=ext([30.61,26.5,22.93,16.38,3.36,.2,.02,.0019,.0000498]),P2=ext([15.4,19.1,24.94,28.3,11.34,.83,.09,.00964,.000267]);const w=R.map((o,a)=>{if(!a)return 0;const l0=Math.log(P0[a]),l1=Math.log(P1[a]),l2=Math.log(P2[a]);let l;if(u<=U1)l=l0+(l1-l0)*Math.max(0,(u-U0)/(U1-U0));else if(u<=U2)l=l1+(l2-l1)*(u-U1)/(U2-U1);else l=l2+.5*(l2-l1)*(u-U2)/(U2-U1);return Math.exp(l)*(t.rare&&a>=4?t.rare:1)});w[0]=Math.max(.01,100-w.slice(1).reduce((x,y)=>x+y,0));return w},luckMul=()=>{const t=ev();return 1+(LUCK_BASE+((S.luck+clanLuck()+(window.dgLuck?dgLuck():0))*(t.lk||1)+(t.la||0))*LUCK_STEP*100)/100},fmtP=e=>e>=1?e.toFixed(1)+"%":e>=.1?e.toFixed(2)+"%":tr("oneIn")+fmt(Math.round(100/e));function pick(){const e=weights(),t=e.reduce((a,r)=>a+r,0);let n=Math.random()*t,o=0;for(;o<e.length&&!((n-=e[o])<0);o++);return o>=e.length&&(o=0),S.ps>=TH(PS)-1&&o<6?o=6:S.pm>=TH(PM)-1&&o<5?o=5:0,S.pl=o>=4?0:S.pl+1,S.pm=o>=5?0:S.pm+1,S.ps=o>=6?0:S.ps+1,o}const dupes=e=>R[e].items.reduce((t,n)=>t+Math.max(0,(S.found[n]||0)-1),0);function show(e,t,n){const[o,...a]=t.split(" "),r=$("orb");if(r.style.setProperty("--rc",RA(e).c),r.dataset.rf=e,r.classList.toggle("rx-sec",e===6),r.classList.toggle("rx-cel",e===9),r.classList.toggle("rx-tra",e===10),$("rr").className=e===9?"rr-cel":e===10?"rr-tra":"",$("em").textContent=o,$("nm").textContent=iname(t),$("rr").textContent=rn(e)+(n?" · "+n:""),$("rr").style.color=RA(e).c,r.classList.remove("reveal"),r.offsetWidth,r.classList.add("reveal"),window.__fxReveal&&__fxReveal(r,e,t,n),e>=4&&!$("pwrap").classList.contains("open")){const i=$("flash");i.style.setProperty("--fc",RA(e).c),i.classList.remove("go"),i.offsetWidth,i.classList.add("go")}}/* ===== НАСТРОЙКИ СКОРОСТИ РОЛЛА (можно менять) =====
+window.nfMode=function(){var m=window.__nf;if(!m){try{m=localStorage.getItem("ca-nf")}catch(e){}m=window.__nf=(m==="words"||m==="full")?m:"short"}return m};
+window.nfSet=function(m){m=(m==="words"||m==="full")?m:"short";window.__nf=m;try{localStorage.setItem("ca-nf",m)}catch(e){}};
+const NFW_RU=[null,["тысяча","тысячи","тысяч"],["миллион","миллиона","миллионов"],["миллиард","миллиарда","миллиардов"],["триллион","триллиона","триллионов"],["квадриллион","квадриллиона","квадриллионов"],["квинтиллион","квинтиллиона","квинтиллионов"],["секстиллион","секстиллиона","секстиллионов"],["септиллион","септиллиона","септиллионов"],["октиллион","октиллиона","октиллионов"],["нониллион","нониллиона","нониллионов"],["дециллион","дециллиона","дециллионов"]],
+NFW_EN=["","thousand","million","billion","trillion","quadrillion","quintillion","sextillion","septillion","octillion","nonillion","decillion"];
+const SUF=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"],fmt=e=>{
+/* Формат чисел (Настройки → Формат чисел): short = 1M · words = 1 миллион · full = 1.000.000 */
+const m=window.nfMode?window.nfMode():"short",en=typeof LANG!=="undefined"&&LANG==="en";
+if(m==="full"&&isFinite(e)){const a=Math.floor(Math.abs(e));let d;
+/* до 1e15 цифры точные; выше точность double ≈15 знаков, остальное — нули (без «хвостов» вроде …999.945) */
+if(a<1e15)d=String(a);else{const q=a.toExponential(14).split("e");d=q[0].replace(".","")+"0".repeat(+q[1]-14)}
+return(e<0?"-":"")+d.replace(/\B(?=(\d{3})+(?!\d))/g,en?",":".")}
+if(e<1e4)return Math.floor(e).toString();
+let t=Math.floor(Math.log10(e)/3),n=e/Math.pow(1e3,t);
++n.toFixed(2)>=1e3&&(t++,n/=1e3);
+if(t>=SUF.length)return e.toExponential(2);
+const v=+n.toFixed(2);
+if(m==="words"){
+if(en)return v+" "+NFW_EN[t];
+let f;if(!Number.isInteger(v))f=1;else{const a=v%100,b=v%10;f=(a>=11&&a<=14)?2:b===1?0:(b>=2&&b<=4)?1:2}
+return String(v).replace(".",",")+" "+NFW_RU[t][f]}
+return v+SUF[t]};var LK=l=>"+"+(+(LUCK_BASE+l*LUCK_STEP*100).toFixed(1)),luckCost=()=>Math.floor(2000*(window.wCm?wCm():1)*Math.pow(1.9,S.luck)*(ev().disc||1)*rbDisc()),weights=e=>{const t=e===void 0?ev():{};e===void 0&&(e=(S.luck+clanLuck()+(window.dgLuck?dgLuck():0))*(t.lk||1)+(t.la||0));/* Удача по таблицам из игры: +8 (старт), +110.7, +423.7. Лог-лог интерполяция по M=1+удача%/100, после +423.7 рост вдвое медленнее, Common = остаток */ const u=Math.log(1+(LUCK_BASE+e*LUCK_STEP*100)/100),U0=Math.log(1.08),U1=Math.log(2.107),U2=Math.log(5.237),ext=A=>R.map((o,i)=>i<A.length?A[i]:A[A.length-1]*o.w/R[A.length-1].w),P0=R.map((o,a)=>a<6?o.w:a===6?.004:a===7?4e-4:1.01e-5),P1=ext([30.61,26.5,22.93,16.38,3.36,.2,.02,.0019,.0000498]),P2=ext([15.4,19.1,24.94,28.3,11.34,.83,.09,.00964,.000267]);const w=R.map((o,a)=>{if(!a)return 0;const l0=Math.log(P0[a]),l1=Math.log(P1[a]),l2=Math.log(P2[a]);let l;if(u<=U1)l=l0+(l1-l0)*Math.max(0,(u-U0)/(U1-U0));else if(u<=U2)l=l1+(l2-l1)*(u-U1)/(U2-U1);else l=l2+.5*(l2-l1)*(u-U2)/(U2-U1);return Math.exp(l)*(t.rare&&a>=4?t.rare:1)});w[0]=Math.max(.01,100-w.slice(1).reduce((x,y)=>x+y,0));return w},luckMul=()=>{const t=ev();return 1+(LUCK_BASE+((S.luck+clanLuck()+(window.dgLuck?dgLuck():0))*(t.lk||1)+(t.la||0))*LUCK_STEP*100)/100},fmtP=e=>e>=1?e.toFixed(1)+"%":e>=.1?e.toFixed(2)+"%":tr("oneIn")+fmt(Math.round(100/e));function pick(){const e=weights(),t=e.reduce((a,r)=>a+r,0);let n=Math.random()*t,o=0;for(;o<e.length&&!((n-=e[o])<0);o++);return o>=e.length&&(o=0),S.ps>=TH(PS)-1&&o<6?o=6:S.pm>=TH(PM)-1&&o<5?o=5:0,S.pl=o>=4?0:S.pl+1,S.pm=o>=5?0:S.pm+1,S.ps=o>=6?0:S.ps+1,o}const dupes=e=>R[e].items.reduce((t,n)=>t+Math.max(0,(S.found[n]||0)-1),0);function show(e,t,n){const[o,...a]=t.split(" "),r=$("orb");if(r.style.setProperty("--rc",RA(e).c),r.dataset.rf=e,r.classList.toggle("rx-sec",e===6),r.classList.toggle("rx-cel",e===9),r.classList.toggle("rx-tra",e===10),$("rr").className=e===9?"rr-cel":e===10?"rr-tra":"",$("em").textContent=o,$("nm").textContent=iname(t),$("rr").textContent=rn(e)+(n?" · "+n:""),$("rr").style.color=RA(e).c,r.classList.remove("reveal"),r.offsetWidth,r.classList.add("reveal"),window.__fxReveal&&__fxReveal(r,e,t,n),e>=4&&!$("pwrap").classList.contains("open")){const i=$("flash");i.style.setProperty("--fc",RA(e).c),i.classList.remove("go"),i.offsetWidth,i.classList.add("go")}}/* ===== НАСТРОЙКИ СКОРОСТИ РОЛЛА (можно менять) =====
    ROLL_T0   — сколько длится ролл, мс: [один ролл, ×10]  (прежняя скорость: 450 и 650)
    RING_PEAK — самая высокая скорость вращения кольца во время ролла (1 = обычная)
    RING_END  — скорость вращения кольца в самом конце ролла */
@@ -3415,132 +3435,18 @@ document.head.appendChild(css);
 H.setAttribute("data-theme","dark");try{localStorage.removeItem("ca-theme")}catch(e){}
 if(ld("eco")==="1")H.classList.add("eco");
 function sett(){
-  const eco=H.classList.contains("eco"),cur=H.getAttribute("data-theme")||"dark";
+  const eco=H.classList.contains("eco"),cur=H.getAttribute("data-theme")||"dark",nm=window.nfMode?window.nfMode():"short";
   return `<div style="font-weight:700;margin-top:6px">🔋 ${L2("Экономия батареи","Battery saver")}</div><div class="xr"><button class="${eco?"":"alt"}" data-x="eco">${eco?L2("Включена","On"):L2("Выключена","Off")}</button></div><div style="color:var(--mute);font-size:12px">${L2("Отключает анимации и фон со звёздами.","Turns off animations and the star background.")}</div>`+
-   `<div style="font-weight:700;margin-top:14px">💾 ${L2("Резервная копия","Backup")}</div><div class="xr"><button data-x="exp">📄 ${L2("Экспорт в файл .txt","Export to .txt")}</button><button class="alt" data-x="impf">📂 ${L2("Импорт из файла (Загрузки)","Import from file (Downloads)")}</button><button class="alt" data-x="impc">📋 ${L2("Вставить из буфера и импортировать","Paste from clipboard & import")}</button><button class="alt" data-x="imp">${L2("Импорт из поля","Import from field")}</button></div><textarea id="xbk" placeholder="${L2("Код сохранения","Save code")}"></textarea>`}
-function profSet(){const e=g("s_ext");if(!e)return;const ta=g("xbk"),v=ta?ta.value:"";e.innerHTML=sett();const n=g("xbk");if(n&&v)n.value=v}
+   `<div style="font-weight:700;margin-top:14px">🔢 ${L2("Формат чисел","Number format")}</div><div class="xr"><button class="${nm==="short"?"":"alt"}" data-x="nf:short">1M</button><button class="${nm==="words"?"":"alt"}" data-x="nf:words">${L2("1 миллион","1 million")}</button><button class="${nm==="full"?"":"alt"}" data-x="nf:full">${L2("1.000.000","1,000,000")}</button></div><div style="color:var(--mute);font-size:12px">${L2("Как показывать монеты и другие большие числа.","How to show coins and other big numbers.")}</div>`}
+function profSet(){const e=g("s_ext");if(!e)return;e.innerHTML=sett()}
 window.__profSet=profSet;
 function draw(){profSet()}
-/* ===== ЗАЩИТА РЕЗЕРВНОЙ КОПИИ =====
-   CA3: код привязан к нику, подписан HMAC-SHA256, при импорте всё проверяется по белому списку.
-   Старый формат CA2 принимается, но валюта из него не повышается. */
-const IMP_CD=10*60*1000;
-const BK_KEY="ca2\u00b7\u2726k7Q#"+"vR9x";
-const K3=["ca3","\u2726","Hm7#Qx2v","Lp9$zT4w","\u00b7","rB6!nK8c"].join("");
-function bkSig(p){let a=0xdeadbeef,b=0x41c6ce57;const t=BK_KEY+p+BK_KEY;for(let i=0,c;i<t.length;i++){c=t.charCodeAt(i);a=Math.imul(a^c,2654435761);b=Math.imul(b^c,1597334677)}a=Math.imul(a^(a>>>16),2246822507)^Math.imul(b^(b>>>13),3266489909);b=Math.imul(b^(b>>>16),2246822507)^Math.imul(a^(a>>>13),3266489909);return(b>>>0).toString(16).padStart(8,"0")+(a>>>0).toString(16).padStart(8,"0")}
-const SK=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
-function sha256b(m){const H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19],l=m.length,w=new Array(64),r=n=>(x,y)=>(x>>>n)|(x<<(32-n));
-  const p=m.slice();p.push(0x80);while(p.length%64!==56)p.push(0);const hi=Math.floor(l*8/4294967296),lo=(l*8)>>>0;[hi,lo].forEach(v=>{p.push(v>>>24&255,v>>>16&255,v>>>8&255,v&255)});
-  for(let o=0;o<p.length;o+=64){for(let i=0;i<16;i++)w[i]=(p[o+4*i]<<24)|(p[o+4*i+1]<<16)|(p[o+4*i+2]<<8)|p[o+4*i+3];
-    for(let i=16;i<64;i++){const a=w[i-15],b=w[i-2],s0=((a>>>7)|(a<<25))^((a>>>18)|(a<<14))^(a>>>3),s1=((b>>>17)|(b<<15))^((b>>>19)|(b<<13))^(b>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)|0}
-    let[a,b,c,d,e,f,g2,h]=H;
-    for(let i=0;i<64;i++){const S1=((e>>>6)|(e<<26))^((e>>>11)|(e<<21))^((e>>>25)|(e<<7)),ch=(e&f)^(~e&g2),t1=(h+S1+ch+SK[i]+w[i])|0,S0=((a>>>2)|(a<<30))^((a>>>13)|(a<<19))^((a>>>22)|(a<<10)),mj=(a&b)^(a&c)^(b&c),t2=(S0+mj)|0;h=g2;g2=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0}
-    H[0]=(H[0]+a)|0;H[1]=(H[1]+b)|0;H[2]=(H[2]+c)|0;H[3]=(H[3]+d)|0;H[4]=(H[4]+e)|0;H[5]=(H[5]+f)|0;H[6]=(H[6]+g2)|0;H[7]=(H[7]+h)|0}
-  const out=[];H.forEach(v=>out.push(v>>>24&255,v>>>16&255,v>>>8&255,v&255));return out}
-const u8=str=>{const e=unescape(encodeURIComponent(str)),o=[];for(let i=0;i<e.length;i++)o.push(e.charCodeAt(i));return o};
-const hx=a=>a.map(x=>x.toString(16).padStart(2,"0")).join("");
-function hmac(msg){let k=u8(K3);if(k.length>64)k=sha256b(k);while(k.length<64)k.push(0);const ip=k.map(x=>x^0x36),op=k.map(x=>x^0x5c);return hx(sha256b(op.concat(sha256b(ip.concat(u8(msg))))))}
-const ctEq=(a,b)=>{if(a.length!==b.length)return false;let r=0;for(let i=0;i<a.length;i++)r|=a.charCodeAt(i)^b.charCodeAt(i);return r===0};
-const b64e=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))),b64d=p=>JSON.parse(decodeURIComponent(escape(atob(p))));
-const BADK={__proto__:1,constructor:1,prototype:1};
-function plain(v,d){if(v===null||typeof v==="boolean")return true;if(typeof v==="number")return isFinite(v);if(typeof v==="string")return v.length<=300;if(d>4)return false;
-  if(Array.isArray(v))return v.length<=600&&v.every(x=>plain(x,d+1));
-  if(typeof v==="object"){const ks=Object.keys(v);if(ks.length>600)return false;return ks.every(k=>!(k in BADK)&&k!=="__proto__"&&plain(v[k],d+1))}return false}
-const EXTRA=["bp","cf","dl","dq","dr","lt","pr","tk","w","wd","wu","ky","mk","kd","du","cp"];
-/* белый список + типы + пределы; всё лишнее (_v,_pc,_ia, неизвестные ключи) отбрасывается */
-function clean(o){
-  if(!o||typeof o!=="object"||Array.isArray(o))return null;
-  const F=FRESH(),ok=new Set(Object.keys(F).concat(EXTRA)),out={},items=new Set(ALL.map(x=>x.t));
-  for(const k of Object.keys(o)){
-    if(!ok.has(k))continue;const v=o[k];
-    if(!plain(v,0))return null;
-    if(k in F){const d=F[k];
-      if(typeof d==="number"){if(typeof v!=="number"||v<(k==="best"?-1:0))return null}
-      else if(Array.isArray(d)){if(!Array.isArray(v))return null}
-      else if(typeof d==="object"){if(!v||typeof v!=="object"||Array.isArray(v))return null}}
-    out[k]=v}
-  if(typeof out.luck==="number"&&out.luck>MAXLUCK)return null;
-  if(typeof out.inc==="number"&&out.inc>MAXINC)return null;
-  if(out.rb!==undefined&&out.rb>10)return null;
-  for(const k of["coins","gem","rolls","pl","pm","ps","pk","pg"])if(out[k]!==undefined&&out[k]>1e300)return null;
-  if(out.found){let sum=0;for(const k of Object.keys(out.found)){const n=out.found[k];if(!items.has(k)||typeof n!=="number"||n<0||n>1e12||Math.floor(n)!==n)return null;sum+=n}
-    if(sum>(+out.rolls||0)+5000)return null}
-  return out}
-function enc(){const keep={};for(const k of Object.keys(S))if(k[0]!=="_")keep[k]=S[k];const p=b64e({v:3,n:(me&&me.nick)||"",t:Date.now(),s:keep});return"CA3."+p+"."+hmac(p)}
-function readCode(c){
-  c=String(c||"").trim();const bad={err:L2("Неверный код","Invalid code")};
-  if(!c||c.length>300000)return bad;
-  try{
-    let m=/^CA3\.([A-Za-z0-9+\/=]+)\.([0-9a-f]{64})$/.exec(c);
-    if(m){if(!ctEq(hmac(m[1]),m[2]))return bad;const b=b64d(m[1]),nick=(me&&me.nick)||"";
-      if(!b||b.v!==3||typeof b.n!=="string")return bad;
-      if(b.n!==""&&b.n!==nick)return{err:L2("Этот код создан для другого аккаунта","This code belongs to another account")};
-      const x=clean(b.s);return x?{s:x}:bad}
-    m=/^CA2\.([A-Za-z0-9+\/=]+)\.([0-9a-f]{16})$/.exec(c);
-    if(m){if(bkSig(m[1])!==m[2])return bad;const x=clean(b64d(m[1]));return x?{s:x,legacy:1}:bad}
-  }catch(e){}
-  return bad}
-function saveTxt(text){
-  const name="crystal-altar-"+(((me&&me.nick)||"guest").replace(/[^\w\-]+/g,"_"))+"-"+new Date().toISOString().slice(0,10)+".txt";
-  try{
-    /* 1) Android-приложение: мост AndroidBridge.saveText сохраняет файл в «Загрузки» */
-    if(window.AndroidBridge&&typeof AndroidBridge.saveText==="function"){
-      return AndroidBridge.saveText(name,text)?"bridge":""}
-    /* 2) WebView без моста обычные загрузки не поддерживает — не обманываем пользователя */
-    if(/;\s*wv\)/.test(navigator.userAgent||""))return"";
-    const blob=new Blob([text],{type:"text/plain;charset=utf-8"});
-    const touch=window.matchMedia&&matchMedia("(pointer:coarse)").matches;
-    if(touch&&typeof File==="function"&&navigator.share&&navigator.canShare){
-      const file=new File([blob],name,{type:"text/plain"});
-      if(navigator.canShare({files:[file]})){navigator.share({files:[file],title:name}).catch(()=>{});return"share"}}
-    const u=URL.createObjectURL(blob),a=document.createElement("a");
-    a.href=u;a.download=name;a.style.display="none";document.body.appendChild(a);a.click();
-    setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},5000);return"file"
-  }catch(e){return""}}
-async function pasteImport(){
-  let t="";
-  try{if(window.AndroidBridge&&typeof AndroidBridge.readClipboard==="function")t=String(AndroidBridge.readClipboard()||"");
-      else if(navigator.clipboard&&navigator.clipboard.readText)t=await navigator.clipboard.readText()}catch(e){}
-  t=String(t||"").trim();
-  if(!t){const x=g("xbk");if(x)x.focus();
-    return toast(L2("Буфер недоступен — вставь код в поле вручную и нажми «Импорт из поля»","Clipboard unavailable — paste the code into the field and tap “Import from field”"),"err")}
-  g("xbk").value=t;doImport()}
-function pickTxt(){
-  const i=document.createElement("input");i.type="file";i.accept=".txt,text/plain";
-  i.onchange=()=>{const f=i.files&&i.files[0];if(!f)return;
-    if(f.size>400000)return toast(L2("Файл слишком большой","File is too large"),"err");
-    const r=new FileReader();r.onload=()=>{g("xbk").value=String(r.result||"").trim();doImport()};
-    r.onerror=()=>toast(L2("Не удалось прочитать файл","Could not read the file"),"err");r.readAsText(f)};
-  i.click()}
-/* кулдаун импорта хранится отдельно для каждого аккаунта (раньше был общий на всё устройство) */
-function impK(){return"imp-"+((typeof me!=="undefined"&&me&&me.nick)?String(me.nick).toLowerCase():"guest")}
-function doImport(){
-  const left=IMP_CD-(Date.now()-(+ld(impK())||0));
-  if(left>0)return toast(L2("Импорт доступен раз в 10 минут. Подожди ","Import is limited. Wait ")+Math.ceil(left/60000)+L2(" мин"," min"),"err");
-  const r=readCode(g("xbk").value);if(r.err)return toast(r.err,"err");
-  if(!confirm(L2("Заменить текущий прогресс кодом?","Replace current progress with the code?")))return;
-  const cur=S,next=Object.assign(FRESH(),r.s);
-  for(const k of["_v","_pc","_ia"])if(cur[k]!==undefined)next[k]=cur[k];
-  if(TOKEN||r.legacy){
-    /* аккаунт/старый код: ничего, что можно «накрутить», выше текущего не поднимается */
-    next.coins=Math.min(+next.coins||0,+cur.coins||0);next.gem=Math.min(+next.gem||0,+cur.gem||0);
-    next.luck=Math.min(+next.luck||0,+cur.luck||0);next.inc=Math.min(+next.inc||0,+cur.inc||0);
-    const cf=cur.found||{},nf={};for(const k of Object.keys(next.found||{}))nf[k]=Math.min(next.found[k],Math.max(+cf[k]||0,1));next.found=nf;
-    next.gp=cur.gp||{};next.pt=cur.pt||[];next.tb=cur.tb||[]}
-  Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,next);normS();render();save();pushSoon();sv(impK(),String(Date.now()));
-  toast(L2("Прогресс загружен","Progress loaded"),"ok");draw()}
 function act(d){
   const a=d.split(":");
   if(a[0]==="lang"){setLang(LANG==="en"?"ru":"en");profSet()}
   else if(a[0]==="th"){}
   else if(a[0]==="eco"){H.classList.toggle("eco");sv("eco",H.classList.contains("eco")?"1":"0");draw()}
-  else if(a[0]==="exp"){const t=g("xbk");try{t.value=enc()}catch(e){return toast(L2("Не удалось создать код","Could not create code"),"err")}
-    try{navigator.clipboard.writeText(t.value)}catch(e){}
-    const r=saveTxt(t.value);
-    toast(r==="bridge"?L2("Файл сохранён в «Загрузки» (код также скопирован)","File saved to Downloads (code also copied)"):r==="share"?L2("Выбери, куда сохранить файл","Choose where to save the file"):r==="file"?L2("Файл .txt скачивается (код также скопирован)","Downloading .txt (code also copied)"):L2("Файл здесь не сохранить — код скопирован в буфер и лежит в поле ниже","Can't save a file here — the code is copied and shown in the field below"),r?"ok":"err")}
-  else if(a[0]==="impf"){pickTxt()}
-  else if(a[0]==="impc"){pasteImport()}
-  else if(a[0]==="imp"){doImport()}
+  else if(a[0]==="nf"){window.nfSet&&window.nfSet(a[1]);try{render()}catch(e){}profSet()}
 }
 {const se=g("s_ext");if(se){se.onclick=e=>{const b=e.target.closest("[data-x]");if(b)act(b.dataset.x)};profSet()}}
 
