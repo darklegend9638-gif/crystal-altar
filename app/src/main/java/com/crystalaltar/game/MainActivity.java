@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -14,6 +15,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 import android.webkit.RenderProcessGoneDetail;
@@ -35,6 +39,11 @@ public class MainActivity extends Activity {
     private FrameLayout root;
     private OnBackInvokedCallback backCb;
     private int renderGone = 0;
+
+    // построчный журнал: Android/data/<пакет>/files/session_log.txt
+    private static final String LOG_NAME = "session_log.txt";
+    private static final int LOG_MAX_BYTES = 400000;
+    private final Object logLock = new Object();
 
     private static final String HOST = "appassets.androidplatform.net";
     private static final String START_URL = "https://" + HOST + "/assets/index.html";
@@ -91,6 +100,18 @@ public class MainActivity extends Activity {
             } catch (Exception e) {
                 return false;
             }
+        }
+
+        /** AndroidBridge.log("текст") - строка в session_log.txt */
+        @JavascriptInterface
+        public void log(String text) {
+            if (text == null) {
+                return;
+            }
+            if (text.length() > 2000) {
+                text = text.substring(0, 2000) + "...";
+            }
+            sessionLog(text);
         }
 
         @JavascriptInterface
@@ -250,6 +271,8 @@ public class MainActivity extends Activity {
                         java.io.StringWriter sw = new java.io.StringWriter();
                         e.printStackTrace(new java.io.PrintWriter(sw));
 
+                        sessionLog("!!! КРАШ в потоке " + t.getName() + ": " + e);
+
                         FileOutputStream o = new FileOutputStream(new File(d, "crash.txt"), true);
                         try {
                             String text = "=== " + new java.util.Date()
@@ -297,6 +320,56 @@ public class MainActivity extends Activity {
 
 
     // =====================================================================
+    //  session_log.txt - построчный журнал с временем
+    //  Формат:  [2026-10-30 21:09:15] текст
+    //  Пишут: Java (запуск, пауза, ошибки WebView) и сама игра (заходы, прокачка, ошибки JS)
+    //  Файл не растёт бесконечно: при превышении ~400 КБ старая половина отрезается
+    // =====================================================================
+    private void sessionLog(String msg) {
+        if (msg == null) {
+            return;
+        }
+
+        synchronized (logLock) {
+            try {
+                File dir = getExternalFilesDir(null);
+                if (dir == null) {
+                    return;
+                }
+                dir.mkdirs();
+
+                File f = new File(dir, LOG_NAME);
+
+                // обрезаем старую половину, если файл стал слишком большим
+                if (f.exists() && f.length() > LOG_MAX_BYTES) {
+                    String all = readAll(f);
+                    int cut = all.indexOf("\n[", all.length() / 2);
+                    String tail = cut >= 0 ? all.substring(cut + 1) : "";
+
+                    FileOutputStream t = new FileOutputStream(f, false);
+                    try {
+                        t.write(tail.getBytes(StandardCharsets.UTF_8));
+                    } finally {
+                        t.close();
+                    }
+                }
+
+                String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date());
+                String line = "[" + time + "] " + msg + "\n";
+
+                FileOutputStream o = new FileOutputStream(f, true);
+                try {
+                    o.write(line.getBytes(StandardCharsets.UTF_8));
+                } finally {
+                    o.close();
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+
+    // =====================================================================
     //  Запуск
     // =====================================================================
     @Override
@@ -305,6 +378,8 @@ public class MainActivity extends Activity {
         installCrashLog();
 
         super.onCreate(b);
+        sessionLog("=== ЗАПУСК приложения · Android " + Build.VERSION.RELEASE
+            + " (API " + Build.VERSION.SDK_INT + ") · " + Build.MANUFACTURER + " " + Build.MODEL + " ===");
 
         // Сохранённое состояние в WebView не передаём:
         // битое/огромное состояние было частой причиной вылета при старте
@@ -399,6 +474,22 @@ public class MainActivity extends Activity {
 
         // <input type="file">: импорт из файла и выбор аватарки
         web.setWebChromeClient(new WebChromeClient() {
+
+            // ошибки и предупреждения из JavaScript игры -> session_log.txt
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage cm) {
+                ConsoleMessage.MessageLevel lvl = cm.messageLevel();
+                if (lvl == ConsoleMessage.MessageLevel.ERROR || lvl == ConsoleMessage.MessageLevel.WARNING) {
+                    String src = cm.sourceId() == null ? "" : cm.sourceId();
+                    int slash = src.lastIndexOf('/');
+                    if (slash >= 0) {
+                        src = src.substring(slash + 1);
+                    }
+                    sessionLog("[JS " + lvl + "] " + cm.message() + " (" + src + ":" + cm.lineNumber() + ")");
+                }
+                return super.onConsoleMessage(cm);
+            }
+
             @Override
             public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb,
                                              FileChooserParams params) {
@@ -419,6 +510,19 @@ public class MainActivity extends Activity {
         });
 
         web.setWebViewClient(new WebViewClient() {
+
+            @Override
+            public void onPageFinished(WebView v, String url) {
+                sessionLog("Страница загружена: " + url);
+            }
+
+            @Override
+            public void onReceivedError(WebView v, WebResourceRequest r,
+                                        android.webkit.WebResourceError err) {
+                if (r.isForMainFrame()) {
+                    sessionLog("ОШИБКА загрузки страницы: " + r.getUrl() + " · " + err.getDescription());
+                }
+            }
 
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
@@ -451,100 +555,4 @@ public class MainActivity extends Activity {
             // если процесс WebView убит системой — пересоздаём (не больше 3 раз), а не падаем
             @Override
             public boolean onRenderProcessGone(WebView v, RenderProcessGoneDetail d) {
-                if (web == v) {
-                    root.removeView(web);
-                    web.destroy();
-                    web = null;
-
-                    if (++renderGone <= 3) {
-                        try {
-                            createWebView(loader, null);
-                        } catch (Throwable t) {
-                            logCrash("recreate", t);
-                        }
-                    }
-                }
-                return true;
-            }
-        });
-
-        boolean restored = false;
-        if (saved != null) {
-            restored = web.restoreState(saved) != null;
-        }
-        if (!restored) {
-            web.loadUrl(START_URL);
-        }
-    }
-
-
-    // =====================================================================
-    //  Жизненный цикл
-    // =====================================================================
-    @Override
-    protected void onActivityResult(int req, int res, Intent data) {
-        super.onActivityResult(req, res, data);
-
-        if (req == REQ_FILE) {
-            if (fileCb != null) {
-                fileCb.onReceiveValue(
-                    res == RESULT_OK
-                        ? WebChromeClient.FileChooserParams.parseResult(res, data)
-                        : null);
-                fileCb = null;
-            }
-        }
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle o) {
-        super.onSaveInstanceState(o);
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public void onBackPressed() {
-        if (web != null && web.canGoBack()) {
-            web.goBack();
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (web != null) {
-            web.onPause();
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (web != null) {
-            web.onResume();
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        try {
-            if (Build.VERSION.SDK_INT >= 33 && backCb != null) {
-                getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backCb);
-            }
-        } catch (Throwable ignored) {
-        }
-
-        try {
-            if (web != null) {
-                root.removeView(web);
-                web.destroy();
-                web = null;
-            }
-        } catch (Throwable ignored) {
-        }
-
-        super.onDestroy();
-    }
-}
+                sessionLog("WebView-процесс упал (crash=" + d.didCrash() + "), пересоздаём #" 
