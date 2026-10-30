@@ -5099,6 +5099,7 @@ go()})();</script><style id="reg-solid">html body #reg{background:radial-gradien
   function sig(ev){return ev.ch.map(function(c){return c.k+"|"+(c.n!==undefined?"n":(c.add||c.rem)?"l":"t")}).join(",")}
   function addEv(t,ch,cd){
     var ev={t:t,ch:ch,coins:cd},pv=cur.events[cur.events.length-1];
+    jlog(ch.map(render).join("; ")+(cd&&Math.abs(cd)>=1?" · монеты "+sg(cd):""));
     if(pv&&t-pv.t<8000&&sig(pv)===sig(ev)){
       pv.t=t;pv.coins=(pv.coins||0)+cd;
       ev.ch.forEach(function(c,i){var o=pv.ch[i];
@@ -5114,6 +5115,8 @@ go()})();</script><style id="reg-solid">html body #reg{background:radial-gradien
     if(c.add||c.rem){var r=[];if(c.add&&c.add.length)r.push("+ "+c.add.join(", "));if(c.rem&&c.rem.length)r.push("− "+c.rem.join(", "));return s+": "+r.join(" ")}
     return s+": "+c.txt
   }
+  /* session_log.txt: построчный журнал (нужен APK с AndroidBridge.log; в старом APK просто молчит) */
+  function jlog(t){try{if(typeof AndroidBridge.log==="function")AndroidBridge.log(t)}catch(e){}}
   function startS(nick,now){
     var prev=null,i;
     for(i=H.length-1;i>=0;i--)if(H[i].nick===nick){prev=H[i];break}
@@ -5121,11 +5124,14 @@ go()})();</script><style id="reg-solid">html body #reg{background:radial-gradien
     cur={n:(prev?prev.n||0:0)+1,nick:nick,start:Date.now(),end:Date.now(),startStats:st,endStats:st,delta:{},events:[],worldChanged:false};
     if(prev){var g={};for(var k in st){var d=st[k]-num(prev.endStats[k]);if(d)g[k]=d}cur.gap=g}
     H.push(cur);while(H.length>MAXS)H.shift();
+    (function(){var g=[],neg=0,k;if(cur.gap)for(k in cur.gap){g.push(ST[k]+" "+sg(cur.gap[k]));if(cur.gap[k]<0)neg=1}
+      jlog("=== ЗАХОД №"+cur.n+" · "+nick+" · удача "+fn(st.luck)+" · доход "+fn(st.income)+" · роллы "+fn(st.rolls)
+        +(g.length?" · между заходами: "+g.join(", "):"")+(neg?"  ⚠ ОТКАТ":"")+" ===")})();
     last=now;dirty=true;flush(true)
   }
   function tick(){
     try{
-      if(typeof S==="undefined"||typeof me==="undefined"||!me||typeof ready==="undefined"||!ready){if(cur){flush(true);cur=null;last=null}return}
+      if(typeof S==="undefined"||typeof me==="undefined"||!me||typeof ready==="undefined"||!ready){if(cur){jlog("Заход №"+cur.n+" завершён · "+cur.nick);flush(true);cur=null;last=null}return}
       if(cur&&cur.nick!==me.nick){flush(true);cur=null;last=null}
       var now=JSON.parse(JSON.stringify(S));
       if(!cur){startS(me.nick,now);return}
