@@ -1025,7 +1025,7 @@ function clanMul(){return(CLAN?1+.03*(CLAN.level||0):1)*rbMul()*gpMul()*(window.
    Покупка за реальные деньги и промокоды этим не затрагиваются.
    ========================================================================================== */
 const ECON = { roll: 1, inc: 1 };
-/* УДАЧА КАК В ANIME ASTRAL: плоский множитель (×2, ×3 …) шанса редких выпадений, начиная с редкости LUCK_FROM (4 = Легендарный и выше). Обычный предмет забирает остаток шанса. Множитель = 1 + уровни удачи × LUCK_STEP */ const INCOME=1,LUCK_STEP=.25,LUCK_BASE=8,LUCK_FROM=4,MAXLUCK=1e6,RBLUCK=20,MAXINC=15,PM=1000,PS=10000,PB=[1,1,1,2,5,12,30,80],PP=[1,2,4,8,15,30,60,120],PN=[["Мышка","Mouse","Воробей","Sparrow"],["Лиса","Fox","Заяц","Hare"],["Волк","Wolf","Сова","Owl"],["Единорог","Unicorn","Грифон","Griffin"],["Дракончик","Dragonet","Левиафан","Leviathan"],["Феникс","Phoenix","Кракен","Kraken"],["Теневой кот","Shadow Cat","Хронодракон","Chrono Drake"],["Солнечный лев","Sun Lion","Звёздный кит","Star Whale"]],PETS=[];PN.forEach((e,t)=>[0,1].forEach(n=>PETS.push({id:"p"+t+n,r:t,ru:e[n*2],en:e[n*2+1],inc:n?Math.ceil(PB[t]*1.5):PB[t],price:n?Math.ceil(PP[t]*1.6):PP[t]})));function petInc(){return(S.pt||[]).reduce((e,t)=>{const n=PETS.find(o=>o.id===t);return e+(n?n.inc:0)},0)+(window.wpInc?wpInc():0)}const gemDrop=e=>0,incAt=e=>(INCOME+e)*(window.wVm?wVm():1),incB=e=>+(e*(window.prMul?prMul():1)*clanMul()*clanInc()*ECON.inc*(window.dgCoin?dgCoin():1)).toFixed(2),inc=()=>incB(incAt(S.inc)+petInc()),incNow=()=>inc()*(ev().inc||1)*(ev().coin||1),fmtInc=e=>String(+(+e).toFixed(2)),incCost=()=>Math.floor(400*(window.wCm?wCm():1)*Math.pow(1.6,S.inc)*(ev().disc||1)*rbDisc()),EVD={luck2:{e:"✨",c:"var(--c3)",lk:1.5,ru:["Повышенная удача","Уровень удачи ×1.5"],en:["Lucky Hour","Luck level ×1.5"]},bless:{e:"🌟",c:"var(--c7)",la:5,ru:["Благословение","+5 уровней удачи"],en:["Blessing","+5 luck levels"]},gold:{e:"💰",c:"var(--c4)",coin:1.5,ru:["Золотой дождь","Монеты ×1.5 с роллов и дохода"],en:["Golden Rain","Coins ×1.5 from rolls and income"]},storm:{e:"🪙",c:"var(--c4)",inc:2,ru:["Монетный шторм","Пассивный доход ×2"],en:["Coin Storm","Passive income ×2"]},sale:{e:"⚡",c:"var(--c2)",disc:.75,ru:["Скидка на прокачку","Удача и доход −25%"],en:["Upgrade Sale","Luck and income −25%"]},shop:{e:"🛒",c:"var(--c1)",shop:.75,ru:["Распродажа","Цены в магазине −25%"],en:["Shop Sale","Shop prices −25%"]},pity:{e:"🎯",c:"var(--c5)",pity:1.5,ru:["Час гаранта","Гаранты срабатывают в 1.5× чаще"],en:["Pity Hour","Pity triggers 1.5× as often"]},gain:{e:"🎲",c:"var(--c6)",gain:1.5,ru:["Щедрые роллы","Награда за роллы ×1.5"],en:["Generous Rolls","Roll rewards ×1.5"]},rare:{e:"🔥",c:"var(--c5)",rare:1.5,ru:["Час легенд","Шанс Legendary и выше ×1.5"],en:["Legend Hour","Legendary+ chance ×1.5"]},mega:{e:"🌈",c:"var(--c7)",lk:1.5,coin:1.5,ru:["Мега-событие","Удача ×1.5 и монеты ×1.5"],en:["Mega Event","Luck ×1.5 and coins ×1.5"]}};let EVL=(()=>{try{const a=JSON.parse(localStorage.getItem(GPX+"gacha-evl")||"[]");return Array.isArray(a)?a.filter(x=>x&&x.id&&x.until>Date.now()):[]}catch{return[]}})(),_evc=null,_evt=0;const setEvl=e=>{EVL=e,_evc=null;try{localStorage.setItem(GPX+"gacha-evl",JSON.stringify(e))}catch{}},evActive=()=>{const s=new Set;return EVL.filter(e=>Date.now()<e.until&&EVD[e.id]&&!s.has(e.id)&&s.add(e.id))};const EVMUL=["lk","coin","inc","disc","shop","pity","gain","rare"],ev=()=>{const e=Date.now();if(_evc&&e<_evt)return _evc;const t=evActive();if(_evt=e+1e3,!t.length)return _evc={};if(t.length===1)return _evc=EVD[t[0].id];const n={};return t.forEach(o=>{const a=EVD[o.id];EVMUL.forEach(r=>{a[r]!=null&&(n[r]=(n[r]||1)*a[r])}),a.la&&(n.la=(n.la||0)+a.la)}),_evc=n},TH=e=>Math.max(2,Math.ceil(e/(ev().pity||1))),pr=e=>Math.floor(e.price*(ev().shop||1)*(gpHas("vip")?.9:1)),setsDone=()=>R.filter(e=>e.items.every(t=>S.found[t])).length,FRESH=()=>({pk:0,pg:0,gem:0,pt:[],coins:30,luck:0,rolls:0,found:{},best:-1,inc:0,pl:0,pm:0,ps:0,tb:[],rb:0,gp:{}});let S=FRESH(),busy=!1;const GENV=/[?&]env=test\b/.test(location.search)||/test\.html$/i.test(location.pathname)?"test":"prod",GPX=GENV==="test"?"test-":"g2-";let GTC={};try{GTC=JSON.parse(localStorage.getItem("gacha-testcfg")||"{}")}catch{}{const e=new URLSearchParams(location.search);if(GENV==="test"&&e.get("sb")&&e.get("key")){GTC={url:e.get("sb").replace(/\/+$/,""),key:e.get("key")};try{localStorage.setItem("gacha-testcfg",JSON.stringify(GTC))}catch{}}}const GCFG={prod:{url:"https://ybjnbrioosiumcnoqvbz.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inliam5icmlvb3NpdW1jbm9xdmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4NjMyMTksImV4cCI6MjEwNjQzOTIxOX0.PO15psCKHeawvXdS50UwF7u7Gq1scL02TM2djXWwIBs"},test:{url:GTC.url||"",key:GTC.key||""}},SB_URL=GCFG[GENV].url,SB_KEY=GCFG[GENV].key;if(GENV==="test"){const e=document.createElement("div");e.textContent=SB_URL?"TEST · "+SB_URL.replace(/^https?:\/\//,"").split(".")[0]:"TEST · сервер не настроен",e.style.cssText="position:fixed;top:env(safe-area-inset-top,0);left:0;z-index:2000;background:#ff4d6d;color:#fff;font:700 11px sans-serif;padding:3px 10px;border-radius:0 0 10px 0;pointer-events:none",document.body.appendChild(e)}/* ===== СЕТЬ: очередь (макс. 5 запросов одновременно), ретраи только для безопасных запросов, пауза при сбоях ===== */
+/* УДАЧА КАК В ANIME ASTRAL: плоский множитель (×2, ×3 …) шанса редких выпадений, начиная с редкости LUCK_FROM (4 = Легендарный и выше). Обычный предмет забирает остаток шанса. Множитель = 1 + уровни удачи × LUCK_STEP */ const INCOME=1,LUCK_STEP=.25,LUCK_BASE=8,LUCK_FROM=4,MAXLUCK=100,RBLUCK=20,MAXINC=15,PM=1000,PS=10000,PB=[1,1,1,2,5,12,30,80],PP=[1,2,4,8,15,30,60,120],PN=[["Мышка","Mouse","Воробей","Sparrow"],["Лиса","Fox","Заяц","Hare"],["Волк","Wolf","Сова","Owl"],["Единорог","Unicorn","Грифон","Griffin"],["Дракончик","Dragonet","Левиафан","Leviathan"],["Феникс","Phoenix","Кракен","Kraken"],["Теневой кот","Shadow Cat","Хронодракон","Chrono Drake"],["Солнечный лев","Sun Lion","Звёздный кит","Star Whale"]],PETS=[];PN.forEach((e,t)=>[0,1].forEach(n=>PETS.push({id:"p"+t+n,r:t,ru:e[n*2],en:e[n*2+1],inc:n?Math.ceil(PB[t]*1.5):PB[t],price:n?Math.ceil(PP[t]*1.6):PP[t]})));function petInc(){return(S.pt||[]).reduce((e,t)=>{const n=PETS.find(o=>o.id===t);return e+(n?n.inc:0)},0)+(window.wpInc?wpInc():0)}const gemDrop=e=>0,incAt=e=>(INCOME+e)*(window.wVm?wVm():1),incB=e=>+(e*(window.prMul?prMul():1)*clanMul()*clanInc()*ECON.inc*(window.dgCoin?dgCoin():1)).toFixed(2),inc=()=>incB(incAt(S.inc)+petInc()),incNow=()=>inc()*(ev().inc||1)*(ev().coin||1),fmtInc=e=>String(+(+e).toFixed(2)),incCost=()=>Math.floor(400*(window.wCm?wCm():1)*Math.pow(1.6,S.inc)*(ev().disc||1)*rbDisc()),EVD={luck2:{e:"✨",c:"var(--c3)",lk:1.5,ru:["Повышенная удача","Уровень удачи ×1.5"],en:["Lucky Hour","Luck level ×1.5"]},bless:{e:"🌟",c:"var(--c7)",la:5,ru:["Благословение","+5 уровней удачи"],en:["Blessing","+5 luck levels"]},gold:{e:"💰",c:"var(--c4)",coin:1.5,ru:["Золотой дождь","Монеты ×1.5 с роллов и дохода"],en:["Golden Rain","Coins ×1.5 from rolls and income"]},storm:{e:"🪙",c:"var(--c4)",inc:2,ru:["Монетный шторм","Пассивный доход ×2"],en:["Coin Storm","Passive income ×2"]},sale:{e:"⚡",c:"var(--c2)",disc:.75,ru:["Скидка на прокачку","Удача и доход −25%"],en:["Upgrade Sale","Luck and income −25%"]},shop:{e:"🛒",c:"var(--c1)",shop:.75,ru:["Распродажа","Цены в магазине −25%"],en:["Shop Sale","Shop prices −25%"]},pity:{e:"🎯",c:"var(--c5)",pity:1.5,ru:["Час гаранта","Гаранты срабатывают в 1.5× чаще"],en:["Pity Hour","Pity triggers 1.5× as often"]},gain:{e:"🎲",c:"var(--c6)",gain:1.5,ru:["Щедрые роллы","Награда за роллы ×1.5"],en:["Generous Rolls","Roll rewards ×1.5"]},rare:{e:"🔥",c:"var(--c5)",rare:1.5,ru:["Час легенд","Шанс Legendary и выше ×1.5"],en:["Legend Hour","Legendary+ chance ×1.5"]},mega:{e:"🌈",c:"var(--c7)",lk:1.5,coin:1.5,ru:["Мега-событие","Удача ×1.5 и монеты ×1.5"],en:["Mega Event","Luck ×1.5 and coins ×1.5"]}};let EVL=(()=>{try{const a=JSON.parse(localStorage.getItem(GPX+"gacha-evl")||"[]");return Array.isArray(a)?a.filter(x=>x&&x.id&&x.until>Date.now()):[]}catch{return[]}})(),_evc=null,_evt=0;const setEvl=e=>{EVL=e,_evc=null;try{localStorage.setItem(GPX+"gacha-evl",JSON.stringify(e))}catch{}},evActive=()=>{const s=new Set;return EVL.filter(e=>Date.now()<e.until&&EVD[e.id]&&!s.has(e.id)&&s.add(e.id))};const EVMUL=["lk","coin","inc","disc","shop","pity","gain","rare"],ev=()=>{const e=Date.now();if(_evc&&e<_evt)return _evc;const t=evActive();if(_evt=e+1e3,!t.length)return _evc={};if(t.length===1)return _evc=EVD[t[0].id];const n={};return t.forEach(o=>{const a=EVD[o.id];EVMUL.forEach(r=>{a[r]!=null&&(n[r]=(n[r]||1)*a[r])}),a.la&&(n.la=(n.la||0)+a.la)}),_evc=n},TH=e=>Math.max(2,Math.ceil(e/(ev().pity||1))),pr=e=>Math.floor(e.price*(ev().shop||1)*(gpHas("vip")?.9:1)),setsDone=()=>R.filter(e=>e.items.every(t=>S.found[t])).length,FRESH=()=>({pk:0,pg:0,gem:0,pt:[],coins:30,luck:0,rolls:0,found:{},best:-1,inc:0,pl:0,pm:0,ps:0,tb:[],rb:0,gp:{}});let S=FRESH(),busy=!1;const GENV=/[?&]env=test\b/.test(location.search)||/test\.html$/i.test(location.pathname)?"test":"prod",GPX=GENV==="test"?"test-":"g2-";let GTC={};try{GTC=JSON.parse(localStorage.getItem("gacha-testcfg")||"{}")}catch{}{const e=new URLSearchParams(location.search);if(GENV==="test"&&e.get("sb")&&e.get("key")){GTC={url:e.get("sb").replace(/\/+$/,""),key:e.get("key")};try{localStorage.setItem("gacha-testcfg",JSON.stringify(GTC))}catch{}}}const GCFG={prod:{url:"https://ybjnbrioosiumcnoqvbz.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inliam5icmlvb3NpdW1jbm9xdmJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4NjMyMTksImV4cCI6MjEwNjQzOTIxOX0.PO15psCKHeawvXdS50UwF7u7Gq1scL02TM2djXWwIBs"},test:{url:GTC.url||"",key:GTC.key||""}},SB_URL=GCFG[GENV].url,SB_KEY=GCFG[GENV].key;if(GENV==="test"){const e=document.createElement("div");e.textContent=SB_URL?"TEST · "+SB_URL.replace(/^https?:\/\//,"").split(".")[0]:"TEST · сервер не настроен",e.style.cssText="position:fixed;top:env(safe-area-inset-top,0);left:0;z-index:2000;background:#ff4d6d;color:#fff;font:700 11px sans-serif;padding:3px 10px;border-radius:0 0 10px 0;pointer-events:none",document.body.appendChild(e)}/* ===== СЕТЬ: очередь (макс. 5 запросов одновременно), ретраи только для безопасных запросов, пауза при сбоях ===== */
 const RO=/^g2_(me|top|profile|now|vip_list|friend_list|players|gift_history|promo_list|trade_list|trade_partner|trade_sync|clan_(caps|me|list|perks|top)|bp_owners|pass_owners|mod_log_list|event_get|save)$/;
 let _act=0,_bad=0;const _wq=[];
 const _slot=()=>new Promise(r=>{_act<5?(_act++,r()):_wq.push(r)});
@@ -1175,7 +1175,7 @@ Object.assign(TX,{"Обменник повторок (повторки → мо�
 var XCHR=1;
 window.__memo=function(k,sig,fn){var c=(window.__mc=window.__mc||{})[k];if(c&&(c.s===sig||(window.__hold&&k==="col")))return c.h;var h=fn();window.__mc[k]={s:sig,h:h};return h};
 function render(){try{peaks()}catch(e){}try{renderRb()}catch(e){}const e=$("gm_bal");e&&(e.textContent=fmt(S.coins)),setNum("coins",S.coins),setNum("gems",S.gem||0);{const s=$("shp");s&&s.style.display==="block"&&renderGem()}typeof drawTop=="function"&&$("topp").style.display==="block"&&drawTop(),$("rolls").textContent=S.rolls;$("r1").disabled=busy||S.coins<rollCost(1),$("r10").disabled=busy||S.coins<rollCost(10),rollLbl();const n=luckCost(),o=S.luck>=MAXLUCK;$("luck").textContent=o?tr("luckmax",LK(MAXLUCK)):tr("luckup",LK(S.luck),LK(S.luck+1),fmt(n)),$("luck").disabled=o||busy||S.coins<n,$("inc").textContent=S.inc>=MAXINC?tr("incmax"):tr("incup",fmtInc(inc()),fmtInc(incB(incAt(S.inc+1)+petInc())),fmt(incCost())),$("inc").disabled=S.inc>=MAXINC||busy||S.coins<incCost(),setH($("pity"),[[5,S.pm||0,TH(PM)],[6,S.ps||0,TH(PS)]].map(([ri,cnt,th])=>{const T=(a,b)=>LANG==="en"?b:a,rem=Math.max(1,th-cnt),pct=Math.max(2,Math.min(100,cnt/th*100)),hot=rem<=1;return`<div class="pt2${hot?" hot":""}${ri===6?" sec":ri===5?" mys":""}" style="--pc:${R[ri].c}"><div class="ph"><b>🎯 ${rname(ri)}</b><span>${hot?T("Следующий ролл — гарант!","Next roll guaranteed!"):T("через ","in ")+fmt(rem)+T(" рл."," rolls")}</span></div><div class="pbar"><i style="width:${pct}%"></i></div><div class="pn2">${fmt(Math.min(cnt,th-1))} / ${fmt(th)}</div></div>`}).join("")+`<div class="pinc">${LANG==="en"?"Income":"Доход"}: ${fmtInc(incNow())}/${LANG==="en"?"s":"с"}</div>`),setH($("xch"),XCHR?xchHtml():""),$("lucklv").innerHTML="+"+(+((luckMul()-1)*100).toFixed(1))+(o?'<span class="mx">MAX</span>':"");const a=weights(),r=a.reduce((s,c)=>s+c,0);setH($("odds"),R.map((s,c)=>{const u=a[c]/r*100,g=Math.max(2,Math.min(100,Math.log10(u*1e4+1)/6*100));return`<div class="od"><span style="color:${s.c};font-weight:700">${s.n}</span><span class="bar"><i style="width:${g}%;background:${s.c}"></i></span><span>${fmtP(u)}</span></div>`}).join(""));const i=weights(RBLUCK),d=i[7]/i.reduce((s,c)=>s+c,0)*100;$("maxd").textContent=tr("maxd",RBLUCK,d.toFixed(3),fmtP(d)),$("pwrap").classList.contains("open")&&(updShop(),0);const l=ALL.filter(s=>S.found[s.t]).length;$("colcount").textContent=tr("colcnt",l,ALL.length,setsDone()*10),window.__colTabs&&window.__colTabs(),setH($("col"),__memo("col",(window.__colTab||"o")+"|"+S.w+"|"+LANG+"|"+weights().join()+"|"+ALL.map(x=>S.found[x.t]|0).join(),()=>{const _a=weights(),_t=_a.reduce((x,y)=>x+y,0),_m=1;return __colWrap(ALL.map((s,k)=>{if(!__colF(S.found[s.t]))return"";const c=S.found[s.t]||0,_p=__pf(_a[s.i]/_t*100*_m/R[s.i].items.length);return __eyeCard(s.t,s.i,c,rname(s.i),c?iname(s.t):"???",R[s.i].c,k,_p)}).join(""))}))}$("upgBtn").onclick=()=>$("upgPanel").classList.toggle("show");
-$("inc").onclick=()=>{const e=incCost();if(busy)return;if((S.w|0)!==0)return toast(L2("Удачу и доход можно качать только в 1 мире (действуют во всех мирах)","Luck and income can only be upgraded in World 1 (they apply to all worlds)"),"err");if(S.inc>=MAXINC)return toast(L2("Доход уже максимальный","Income is already maxed"),"err");if(S.coins<e)return toast(L2("Не хватает монет","Not enough coins"),"err");S.coins-=e,S.inc++,dqAdd("up",1),render(),save(),toast(L2("Доход повышен: ","Income upgraded: ")+fmtInc(inc())+L2("/с","/s"),"ok")},$("r1").onclick=()=>roll(1),$("r10").onclick=()=>roll(10);$("luck").onclick=()=>{const e=luckCost();if(busy)return;if((S.w|0)!==0)return toast(L2("Удачу и доход можно качать только в 1 мире (действуют во всех мирах)","Luck and income can only be upgraded in World 1 (they apply to all worlds)"),"err");if(S.luck>=MAXLUCK)return toast(L2("Удача уже максимальная","Luck is already maxed"),"err");if(S.coins<e)return toast(L2("Не хватает монет","Not enough coins"),"err");S.coins-=e,S.luck++,dqAdd("up",1),render(),save(),toast(L2("Удача повышена: ","Luck upgraded: ")+LK(S.luck),"ok")};function showNotice(e,t,n=!0){toast(e&&t?e+": "+t:t||e,n?"ok":"err")}$("noticeOk").onclick=()=>$("noticeModal").classList.remove("show"),$("noticeModal").onclick=e=>{e.target===$("noticeModal")&&$("noticeModal").classList.remove("show")},$("reset").onclick=async()=>{!isOwner||!TOKEN||$("confirmModal").classList.add("show")},$("confirmNo").onclick=()=>$("confirmModal").classList.remove("show"),$("confirmModal").onclick=e=>{e.target===$("confirmModal")&&$("confirmModal").classList.remove("show")},$("confirmYes").onclick=async()=>{$("confirmModal").classList.remove("show");const e=await rpc("g2_reset_all",{p_token:TOKEN});if(e.error){showNotice(tr("error"),e.error,!1);return}S=FRESH(),dirty=!1,resetOrb(),TRB=1,render(),snapNums(),showNotice(tr("done"),tr("wiped"),!0)};let isOwner=!1,granted=!1,me=null,pickAv="😀",mode="reg";const isImg=e=>/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(e||""),bad=e=>/^data:/.test(e||"")&&!isImg(e),avH=e=>isImg(e)?`<img class="avimg" src="${e}" alt="">`:esc(!e||bad(e)?"👤":e),avT=e=>isImg(e)?"🖼":!e||bad(e)?"👤":e,avP=e=>isImg(e)?"":avT(e)+" ",AVMAP={};let lastCust="",avCb=null;function fileToAv(e){return new Promise((t,n)=>{const o=URL.createObjectURL(e),a=new Image;a.onload=()=>{const i=document.createElement("canvas");i.width=i.height=96;const d=i.getContext("2d"),l=Math.min(a.width,a.height);d.fillStyle="#120d26",d.fillRect(0,0,96,96),d.drawImage(a,(a.width-l)/2,(a.height-l)/2,l,l,0,0,96,96),URL.revokeObjectURL(o),t(i.toDataURL("image/jpeg",.82))},a.onerror=()=>{URL.revokeObjectURL(o),n()},a.src=o})}const upl=document.createElement("input");upl.type="file",upl.accept="image/*",upl.style.display="none",document.body.appendChild(upl),upl.onchange=async()=>{const e=upl.files[0];if(upl.value="",!!e)try{lastCust=await fileToAv(e),pickAv=lastCust,avCb&&avCb()}catch{toast(tr("avbad"),"err")}};
+$("inc").onclick=()=>{const e=incCost();if(busy)return;if(S.inc>=MAXINC)return toast(L2("Доход уже максимальный","Income is already maxed"),"err");if(S.coins<e)return toast(L2("Не хватает монет","Not enough coins"),"err");S.coins-=e,S.inc++,dqAdd("up",1),render(),save(),toast(L2("Доход повышен: ","Income upgraded: ")+fmtInc(inc())+L2("/с","/s"),"ok")},$("r1").onclick=()=>roll(1),$("r10").onclick=()=>roll(10);$("luck").onclick=()=>{const e=luckCost();if(busy)return;if(S.luck>=MAXLUCK)return toast(L2("Удача уже максимальная","Luck is already maxed"),"err");if(S.coins<e)return toast(L2("Не хватает монет","Not enough coins"),"err");S.coins-=e,S.luck++,dqAdd("up",1),render(),save(),toast(L2("Удача повышена: ","Luck upgraded: ")+LK(S.luck),"ok")};function showNotice(e,t,n=!0){toast(e&&t?e+": "+t:t||e,n?"ok":"err")}$("noticeOk").onclick=()=>$("noticeModal").classList.remove("show"),$("noticeModal").onclick=e=>{e.target===$("noticeModal")&&$("noticeModal").classList.remove("show")},$("reset").onclick=async()=>{!isOwner||!TOKEN||$("confirmModal").classList.add("show")},$("confirmNo").onclick=()=>$("confirmModal").classList.remove("show"),$("confirmModal").onclick=e=>{e.target===$("confirmModal")&&$("confirmModal").classList.remove("show")},$("confirmYes").onclick=async()=>{$("confirmModal").classList.remove("show");const e=await rpc("g2_reset_all",{p_token:TOKEN});if(e.error){showNotice(tr("error"),e.error,!1);return}S=FRESH(),dirty=!1,resetOrb(),TRB=1,render(),snapNums(),showNotice(tr("done"),tr("wiped"),!0)};let isOwner=!1,granted=!1,me=null,pickAv="😀",mode="reg";const isImg=e=>/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(e||""),bad=e=>/^data:/.test(e||"")&&!isImg(e),avH=e=>isImg(e)?`<img class="avimg" src="${e}" alt="">`:esc(!e||bad(e)?"👤":e),avT=e=>isImg(e)?"🖼":!e||bad(e)?"👤":e,avP=e=>isImg(e)?"":avT(e)+" ",AVMAP={};let lastCust="",avCb=null;function fileToAv(e){return new Promise((t,n)=>{const o=URL.createObjectURL(e),a=new Image;a.onload=()=>{const i=document.createElement("canvas");i.width=i.height=96;const d=i.getContext("2d"),l=Math.min(a.width,a.height);d.fillStyle="#120d26",d.fillRect(0,0,96,96),d.drawImage(a,(a.width-l)/2,(a.height-l)/2,l,l,0,0,96,96),URL.revokeObjectURL(o),t(i.toDataURL("image/jpeg",.82))},a.onerror=()=>{URL.revokeObjectURL(o),n()},a.src=o})}const upl=document.createElement("input");upl.type="file",upl.accept="image/*",upl.style.display="none",document.body.appendChild(upl),upl.onchange=async()=>{const e=upl.files[0];if(upl.value="",!!e)try{lastCust=await fileToAv(e),pickAv=lastCust,avCb&&avCb()}catch{toast(tr("avbad"),"err")}};
 /* ===== Крутые аватарки: процедурные аниме-портреты (canvas -> JPEG data-URL) ===== */
 let _AVX=null;
 function AVX(){
@@ -2977,7 +2977,7 @@ function draw(){
 }
 const _r=render;render=function(){const r=_r.apply(this,arguments);try{draw()}catch(e){}
   try{const h=(S.w|0)!==0,l=$("luck"),rb=$("rbBox");
-    if(l&&l.parentElement)l.parentElement.style.display=h?"none":"";
+    if(l&&l.parentElement)l.parentElement.style.display="";
     if(rb)rb.style.display=h?"none":"";}catch(e){}
   return r};
 $("wdb").onclick=()=>{const pw=$("wdp");pw.style.display="block";draw();openPanel("wdp")};
@@ -3315,7 +3315,7 @@ setInterval(()=>{if(!ready)return;for(const k in AU){if(!AU[k])continue;const w=
 const nn=S.coins>=eggCost(10)?10:S.coins>=eggCost(1)?1:0;if(nn)doHatch(w,nn,true)}},500);
 $$("wpin").onclick=e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.h)hatch(+b.dataset.h);else if(b.dataset.au){if(own(ew).every(x=>x))return toast(L2("Все питомцы этого мира уже собраны","All pets of this world are collected"),"ok");AU[ew]=!AU[ew];ui()}};
 window.wpUp=()=>{try{return `<button class="alt" data-wo="up" data-wid="0">⚡ ${L2("Прокачка","Upgrades")} · 🍀 ${LK(S.luck)} · 💰 ${fmtInc(incAt(S.inc))} · 🔄 ${rbN()}/${RB_MAX}</button>`}catch(e){return""}};
-window.wpAct=(k,wid)=>{if(k==="up"){window.upOpen&&window.upOpen();return}if(k==="cu"){window.cuBuy();return}if(k==="sk"){window.skOpen&&window.skOpen();return}if(k==="lk"||k==="ic"||k==="rb"){if((S.w|0)!==0)return toast(L2("Зайди в 1 мир, чтобы прокачивать","Enter World 1 first"),"err");
+window.wpAct=(k,wid)=>{if(k==="up"){window.upOpen&&window.upOpen();return}if(k==="cu"){window.cuBuy();return}if(k==="sk"){window.skOpen&&window.skOpen();return}if(k==="lk"||k==="ic"||k==="rb"){if(k==="rb"&&(S.w|0)!==0)return;
  if(k==="rb"){const b=$$("rbBtn");if(!b||b.disabled)return toast(L2("Требования перерождения не выполнены","Rebirth requirements not met"),"err");b.click();if(typeof rbArm!=="undefined"&&rbArm)toast(L2("Нажми ещё раз — прогресс сбросится","Tap again — progress will reset"),"info");return}
  const b=$$(k==="lk"?"luck":"inc");if(b&&!b.disabled)b.click();return}
 if(k!=="p"&&window.gxOpen)return gxOpen(0,wid);
@@ -4430,14 +4430,14 @@ try{const x=wp.querySelector(".pclose").cloneNode(true);x.onclick=()=>closePanel
 const h0=()=>(S.w|0)===0;
 function draw(){
  const h=h0(),n=rbN(),mx=n>=RB_MAX,q=rbReq(Math.min(n,RB_MAX-1)),ok=!mx&&rbOk(n);
- $("upsub").textContent=h?L2("Удача, доход и перерождение действуют во всех мирах","Luck, income and rebirth apply to all worlds"):L2("Прокачка доступна только в 1 мире — зайди туда, чтобы улучшать","Upgrades are only available in World 1 — enter it to upgrade");
+ $("upsub").textContent=h?L2("Удача, доход и перерождение действуют во всех мирах","Luck, income and rebirth apply to all worlds"):L2("Удача и доход качаются за монеты текущего мира","Luck and income are bought with the current world's coins");
  const card=(ic,t,sub,k,txt,dis)=>`<div class="glass ti"><div class="ic" style="font-size:26px">${ic}</div><div class="tx"><b>${t}</b><span>${sub}</span></div><button data-u="${k}" ${dis?"disabled":""}>${txt}</button></div>`;
  const lm=S.luck>=MAXLUCK,im=S.inc>=MAXINC;
  const lc=luckCost(),ic=incCost();
- let html=card("🍀",L2("Удача","Luck"),lm?LK(S.luck)+" · MAX":LK(S.luck)+" → "+LK(S.luck+1),"lk",lm?"MAX":(h?fmt(lc):"—"),!h||lm||busy||S.coins<lc);
- html+=card("💰",L2("Доход","Income"),im?fmtInc(inc())+L2("/с · MAX","/s · MAX"):fmtInc(inc())+L2("/с → ","/s → ")+fmtInc(incB(incAt(S.inc+1)+petInc()))+L2("/с","/s"),"ic",im?"MAX":(h?fmt(ic):"—"),!h||im||busy||S.coins<ic);
+ let html=card("🍀",L2("Удача","Luck"),lm?LK(S.luck)+" · MAX":LK(S.luck)+" → "+LK(S.luck+1),"lk",lm?"MAX":fmt(lc),lm||busy||S.coins<lc);
+ html+=card("💰",L2("Доход","Income"),im?fmtInc(inc())+L2("/с · MAX","/s · MAX"):fmtInc(inc())+L2("/с → ","/s → ")+fmtInc(incB(incAt(S.inc+1)+petInc()))+L2("/с","/s"),"ic",im?"MAX":fmt(ic),im||busy||S.coins<ic);
  const rq=mx?L2("Максимум перерождений","Max rebirths"):L2("Нужно: монеты ","Needs: coins ")+fmt(q.coins)+L2(", удача ",", luck ")+q.luck+L2(", доход ",", income ")+q.inc+L2(", редкость ≥ ",", rarity ≥ ")+(R[Math.min(q.best,R.length-1)].n);
- html+=card("🔄",L2("Перерождение ","Rebirth ")+n+"/"+RB_MAX,rq,"rb",mx?"MAX":L2("Переродиться","Rebirth"),!h||!ok||busy);
+ if(h)html+=card("🔄",L2("Перерождение ","Rebirth ")+n+"/"+RB_MAX,rq,"rb",mx?"MAX":L2("Переродиться","Rebirth"),!ok||busy);
  $("upin").innerHTML=html;
 }
 window.upOpen=()=>{p.style.display="block";draw();openPanel("upp")};
@@ -5147,4 +5147,133 @@ box.appendChild(x);box.appendChild(t);
 while(sh.firstChild)box.appendChild(sh.firstChild);
 sh.appendChild(box);
 sh.addEventListener("click",function(e){if(e.target===sh){var o=document.getElementById("sheetX");o&&o.onclick&&o.onclick()}})}
-go()})();</script><style id="reg-solid">html body #reg{background:radial-gradient(90% 62% at 50% 34%,#2b1b70 0%,#150e3b 38%,#080819 72%,#04040b 100%)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;z-index:2147483000!important}</style></body> </html>
+go()})();</script><style id="reg-solid">html body #reg{background:radial-gradient(90% 62% at 50% 34%,#2b1b70 0%,#150e3b 38%,#080819 72%,#04040b 100%)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;z-index:2147483000!important}</style><script>
+/* Журнал заходов: Android/data/<пакет>/files/sessions.json и report.txt */
+(function(){
+  if(!window.AndroidBridge||!AndroidBridge.writeFile||!AndroidBridge.readFile)return;
+  var MAXS=40,MAXE=400,SKIP={wd:1,en:1,et:1,pl:1,pm:1,ps:1};
+  var LBL={coins:"Монеты",gem:"Тикеты",luck:"Удача (уровень)",inc:"Доход (уровень)",rolls:"Роллы",found:"Коллекция",pt:"Питомцы",gp:"Геймпассы",w:"Мир",best:"Лучшая редкость",wu:"Открытые миры",dr:"Ежедневная награда",dq:"Ежедневные задания",rb:"Перерождения"};
+  var ST={coins:"Монеты",gems:"Тикеты",luck:"Удача",income:"Доход",rolls:"Роллы",items:"Предметов в коллекции",pets:"Питомцев"};
+  var H=[],cur=null,last=null,dirty=false,lastW=0;
+  try{var tx=AndroidBridge.readFile("sessions.json");var a=tx?JSON.parse(tx):[];if(Array.isArray(a))H=a}catch(e){}
+  function pad(n){return n<10?"0"+n:""+n}
+  function fd(t){var d=new Date(t);return pad(d.getDate())+"."+pad(d.getMonth()+1)+"."+d.getFullYear()+" "+pad(d.getHours())+":"+pad(d.getMinutes())}
+  function ft(t){var d=new Date(t);return pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds())}
+  function fn(n){n=+n||0;return (Math.round(n*100)/100).toLocaleString("ru-RU",{maximumFractionDigits:2})}
+  function sg(n){return (n>0?"+":n<0?"−":"")+fn(Math.abs(n))}
+  function num(x){return typeof x==="number"&&isFinite(x)?x:0}
+  function stats(s){var f=s.found||{};return{coins:num(s.coins),gems:num(s.gem),luck:num(s.luck),income:num(s.inc),rolls:num(s.rolls),items:Object.keys(f).length,pets:(s.pt||[]).length}}
+  function label(p){var q=p.split(".");q[0]=LBL[q[0]]||q[0];return q.join(" › ")}
+  function short(v){var t;try{t=JSON.stringify(v)}catch(e){t=String(v)}t=String(t);return t.length>60?t.slice(0,57)+"…":t}
+  function petName(id){try{if(typeof PETS!=="undefined"){var p=PETS.find(function(x){return x.id===id});if(p)return p.ru}}catch(e){}return id}
+  function cnt(arr){var m={};arr.forEach(function(x){var k=typeof x==="string"?x:JSON.stringify(x);m[k]=(m[k]||0)+1});return m}
+  function walk(a,b,p,out,d){
+    if(out.length>=8||a===b)return;
+    var ta=typeof a,tb=typeof b;
+    if(a===undefined){out.push({k:p,txt:"новое "+short(b)});return}
+    if(b===undefined){out.push({k:p,txt:"убрано"});return}
+    if(ta==="number"&&tb==="number"){if(Math.abs(b-a)>1e-9)out.push({k:p,n:b-a});return}
+    if(Array.isArray(a)&&Array.isArray(b)){
+      var ca=cnt(a),cb=cnt(b),ad=[],rm=[],k;
+      for(k in cb)for(var i=0;i<cb[k]-(ca[k]||0);i++)ad.push(p==="pt"?petName(k):k);
+      for(k in ca)for(var j=0;j<ca[k]-(cb[k]||0);j++)rm.push(p==="pt"?petName(k):k);
+      if(ad.length||rm.length)out.push({k:p,add:ad,rem:rm});return}
+    if(a&&b&&ta==="object"&&tb==="object"&&!Array.isArray(a)&&!Array.isArray(b)){
+      if(d>=3){if(JSON.stringify(a)!==JSON.stringify(b))out.push({k:p,txt:"изменено"});return}
+      var add=[],rem=[],key,ks={};
+      for(key in a)ks[key]=1;for(key in b)ks[key]=1;
+      for(key in ks){
+        if(!(key in a))add.push(key);else if(!(key in b))rem.push(key);
+        else if(p!=="found")walk(a[key],b[key],p+"."+key,out,d+1)
+      }
+      if(add.length||rem.length)out.push({k:p==="found"?"Новые предметы":p,add:add,rem:p==="found"?[]:rem});
+      return}
+    out.push({k:p,txt:short(a)+" → "+short(b)})
+  }
+  function sig(ev){return ev.ch.map(function(c){return c.k+"|"+(c.n!==undefined?"n":(c.add||c.rem)?"l":"t")}).join(",")}
+  function addEv(t,ch,cd){
+    var ev={t:t,ch:ch,coins:cd},pv=cur.events[cur.events.length-1];
+    if(pv&&t-pv.t<8000&&sig(pv)===sig(ev)){
+      pv.t=t;pv.coins=(pv.coins||0)+cd;
+      ev.ch.forEach(function(c,i){var o=pv.ch[i];
+        if(c.n!==undefined)o.n+=c.n;
+        else if(c.add||c.rem){o.add=(o.add||[]).concat(c.add||[]);o.rem=(o.rem||[]).concat(c.rem||[])}
+        else o.txt=c.txt});
+      return}
+    cur.events.push(ev);if(cur.events.length>MAXE)cur.events.shift()
+  }
+  function render(c){
+    var s=label(c.k);
+    if(c.n!==undefined)return s+" "+sg(c.n);
+    if(c.add||c.rem){var r=[];if(c.add&&c.add.length)r.push("+ "+c.add.join(", "));if(c.rem&&c.rem.length)r.push("− "+c.rem.join(", "));return s+": "+r.join(" ")}
+    return s+": "+c.txt
+  }
+  function startS(nick,now){
+    var prev=null,i;
+    for(i=H.length-1;i>=0;i--)if(H[i].nick===nick){prev=H[i];break}
+    var st=stats(now);
+    cur={n:(prev?prev.n||0:0)+1,nick:nick,start:Date.now(),end:Date.now(),startStats:st,endStats:st,delta:{},events:[],worldChanged:false};
+    if(prev){var g={};for(var k in st){var d=st[k]-num(prev.endStats[k]);if(d)g[k]=d}cur.gap=g}
+    H.push(cur);while(H.length>MAXS)H.shift();
+    last=now;dirty=true;flush(true)
+  }
+  function tick(){
+    try{
+      if(typeof S==="undefined"||typeof me==="undefined"||!me||typeof ready==="undefined"||!ready){if(cur){flush(true);cur=null;last=null}return}
+      if(cur&&cur.nick!==me.nick){flush(true);cur=null;last=null}
+      var now=JSON.parse(JSON.stringify(S));
+      if(!cur){startS(me.nick,now);return}
+      var t=Date.now();
+      if((last.w|0)!==(now.w|0)){
+        cur.worldChanged=true;
+        addEv(t,[{k:"w",txt:(last.w|0)+" → "+(now.w|0)}],0);
+      }else{
+        var sa=stats(last),sb=stats(now),k;
+        for(k in sb)cur.delta[k]=(cur.delta[k]||0)+(sb[k]-sa[k]);
+        var out=[];
+        for(k in now){if(SKIP[k]||k.charAt(0)==="_"||k==="coins")continue;walk(last[k],now[k],k,out,0)}
+        var cd=num(now.coins)-num(last.coins);
+        if(out.length)addEv(t,out,cd);
+        else if(cd<-0.5)addEv(t,[{k:"coins",txt:"потрачено"}],cd);
+      }
+      cur.end=t;cur.endStats=stats(now);last=now;dirty=true;flush(false)
+    }catch(e){}
+  }
+  function sums(nick){
+    var tot={},c=0;
+    H.forEach(function(s){if(s.nick!==nick)return;c++;for(var k in s.delta)tot[k]=(tot[k]||0)+s.delta[k]});
+    return {tot:tot,c:c}
+  }
+  function report(){
+    var L=["КРИСТАЛЬНЫЙ АЛТАРЬ — история заходов","(файл только для чтения: изменения здесь на игру не влияют)",""];
+    var nick=H.length?H[H.length-1].nick:"",sm=sums(nick),k;
+    L.push("Игрок: "+nick+" · заходов в журнале: "+sm.c);
+    var tl=[];for(k in ST)if(sm.tot[k])tl.push(ST[k]+" "+sg(sm.tot[k]));
+    L.push("Всего за все заходы: "+(tl.length?tl.join(", "):"без изменений"));L.push("");
+    H.slice(-10).reverse().forEach(function(s){
+      L.push("=== Заход №"+(s.n||"?")+" · "+s.nick+" · "+fd(s.start)+" → "+ft(s.end)+" ("+Math.max(1,Math.round((s.end-s.start)/60000))+" мин) ===");
+      if(s.gap){var g=[];for(k in s.gap)g.push(ST[k]+" "+sg(s.gap[k]));if(g.length)L.push("Между заходами изменилось: "+g.join(", "))}
+      L.push("Было → Стало (итог):");
+      for(k in ST)L.push("  "+ST[k]+": "+fn(s.startStats[k])+" → "+fn(s.endStats[k])+" ("+sg(s.delta[k]||0)+")");
+      if(s.worldChanged)L.push("  * в заходе была смена мира, поэтому «итог» суммирует изменения внутри каждого мира");
+      L.push("Что делал:");
+      if(!s.events.length)L.push("  (ничего не зафиксировано)");
+      s.events.forEach(function(e){
+        L.push("  "+ft(e.t)+"  "+e.ch.map(render).join("; ")+(e.coins&&Math.abs(e.coins)>=1?" · монеты "+sg(e.coins):""))
+      });
+      L.push("")
+    });
+    return L.join("\n")
+  }
+  function flush(f){
+    if(!H.length)return;var n=Date.now();
+    if(!f&&(!dirty||n-lastW<5000))return;
+    dirty=false;lastW=n;
+    try{AndroidBridge.writeFile("sessions.json",JSON.stringify(H));AndroidBridge.writeFile("report.txt",report())}catch(e){}
+  }
+  setInterval(tick,3000);setTimeout(tick,1500);
+  document.addEventListener("visibilitychange",function(){if(document.hidden){tick();flush(true)}});
+  window.addEventListener("pagehide",function(){flush(true)});
+})();
+</script>
+</body> </html>
