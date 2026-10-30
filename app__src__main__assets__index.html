@@ -5250,26 +5250,42 @@ go()})();</script><style id="reg-solid">html body #reg{background:radial-gradien
     L.push("Игрок: "+nick+" · заходов в журнале: "+sm.c);
     var tl=[];for(k in ST)if(sm.tot[k])tl.push(ST[k]+" "+sg(sm.tot[k]));
     L.push("Всего за все заходы: "+(tl.length?tl.join(", "):"без изменений"));L.push("");
-    H.slice(-10).reverse().forEach(function(s){
+    L.push("СПИСОК ВСЕХ ЗАХОДОВ (новые сверху):");
+    H.slice().reverse().forEach(function(s){
+      var rb=0;if(s.gap)for(var q in s.gap)if(s.gap[q]<0)rb=1;
+      L.push("  №"+(s.n||"?")+" · "+s.nick+" · "+fd(s.start)+" · "+Math.max(1,Math.round((s.end-s.start)/60000))+" мин"
+        +" · удача "+fn(s.startStats.luck)+"→"+fn(s.endStats.luck)
+        +" · доход "+fn(s.startStats.income)+"→"+fn(s.endStats.income)
+        +" · монеты "+sg((s.delta||{}).coins||0)+(rb?"  ⚠ ОТКАТ при входе":""))
+    });
+    L.push("");
+    H.slice().reverse().forEach(function(s){
       L.push("=== Заход №"+(s.n||"?")+" · "+s.nick+" · "+fd(s.start)+" → "+ft(s.end)+" ("+Math.max(1,Math.round((s.end-s.start)/60000))+" мин) ===");
-      if(s.gap){var g=[];for(k in s.gap)g.push(ST[k]+" "+sg(s.gap[k]));if(g.length)L.push("Между заходами изменилось: "+g.join(", "))}
+      if(s.gap){var g=[];for(k in s.gap)g.push(ST[k]+" "+sg(s.gap[k]));if(g.length){var neg=0;for(k in s.gap)if(s.gap[k]<0)neg=1;L.push((neg?"⚠ ОТКАТ! ":"")+"Между заходами изменилось: "+g.join(", "))}}
       L.push("Было → Стало (итог):");
       for(k in ST)L.push("  "+ST[k]+": "+fn(s.startStats[k])+" → "+fn(s.endStats[k])+" ("+sg(s.delta[k]||0)+")");
       if(s.worldChanged)L.push("  * в заходе была смена мира, поэтому «итог» суммирует изменения внутри каждого мира");
       L.push("Что делал:");
       if(!s.events.length)L.push("  (ничего не зафиксировано)");
-      s.events.forEach(function(e){
+      if(s.events.length>100)L.push("  … ранних записей скрыто: "+(s.events.length-100)+" (полностью — в sessions.json)");
+      s.events.slice(-100).forEach(function(e){
         L.push("  "+ft(e.t)+"  "+e.ch.map(render).join("; ")+(e.coins&&Math.abs(e.coins)>=1?" · монеты "+sg(e.coins):""))
       });
       L.push("")
     });
     return L.join("\n")
   }
+  /* sessions.json: каждая сессия отдельным блоком с отступами; если файл слишком большой — по одной сессии на строку */
+  function pretty(){
+    var t=JSON.stringify(H,null,2);
+    if(t.length<=900000)return t;
+    return "[\n"+H.map(function(s){return JSON.stringify(s)}).join(",\n")+"\n]"
+  }
   function flush(f){
     if(!H.length)return;var n=Date.now();
     if(!f&&(!dirty||n-lastW<5000))return;
     dirty=false;lastW=n;
-    try{AndroidBridge.writeFile("sessions.json",JSON.stringify(H));AndroidBridge.writeFile("report.txt",report())}catch(e){}
+    try{AndroidBridge.writeFile("sessions.json",pretty());AndroidBridge.writeFile("report.txt",report())}catch(e){}
   }
   setInterval(tick,3000);setTimeout(tick,1500);
   document.addEventListener("visibilitychange",function(){if(document.hidden){tick();flush(true)}});
