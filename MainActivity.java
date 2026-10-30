@@ -132,7 +132,36 @@ public class MainActivity extends Activity {
         } finally { in.close(); }
     }
 
+    /** Диагностика: пишет Android/data/<пакет>/files/launch.txt при старте и crash.txt при падении */
+    private void installCrashLog() {
+        try {
+            File d = getExternalFilesDir(null);
+            if (d != null) {
+                d.mkdirs();
+                FileOutputStream o = new FileOutputStream(new File(d, "launch.txt"));
+                try { o.write(("onCreate " + new java.util.Date()).getBytes(StandardCharsets.UTF_8)); } finally { o.close(); }
+            }
+        } catch (Throwable ignored) { }
+        final Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override public void uncaughtException(Thread t, Throwable e) {
+                try {
+                    File d = getExternalFilesDir(null);
+                    if (d != null) {
+                        d.mkdirs();
+                        java.io.StringWriter sw = new java.io.StringWriter();
+                        e.printStackTrace(new java.io.PrintWriter(sw));
+                        FileOutputStream o = new FileOutputStream(new File(d, "crash.txt"), true);
+                        try { o.write(("=== " + new java.util.Date() + " thread=" + t.getName() + "\n" + sw + "\n").getBytes(StandardCharsets.UTF_8)); } finally { o.close(); }
+                    }
+                } catch (Throwable ignored) { }
+                if (prev != null) prev.uncaughtException(t, e);
+            }
+        });
+    }
+
     @Override protected void onCreate(Bundle b) {
+        installCrashLog();
         super.onCreate(b);
         final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
             .setDomain(HOST)
