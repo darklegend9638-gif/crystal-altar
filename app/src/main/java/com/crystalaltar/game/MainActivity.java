@@ -555,4 +555,105 @@ public class MainActivity extends Activity {
             // если процесс WebView убит системой — пересоздаём (не больше 3 раз), а не падаем
             @Override
             public boolean onRenderProcessGone(WebView v, RenderProcessGoneDetail d) {
-                sessionLog("WebView-процесс упал (crash=" + d.didCrash() + "), пересоздаём #" 
+                sessionLog("WebView-процесс упал (crash=" + d.didCrash() + "), пересоздаём #" + (renderGone + 1));
+                if (web == v) {
+                    root.removeView(web);
+                    web.destroy();
+                    web = null;
+
+                    if (++renderGone <= 3) {
+                        try {
+                            createWebView(loader, null);
+                        } catch (Throwable t) {
+                            logCrash("recreate", t);
+                        }
+                    }
+                }
+                return true;
+            }
+        });
+
+        boolean restored = false;
+        if (saved != null) {
+            restored = web.restoreState(saved) != null;
+        }
+        if (!restored) {
+            web.loadUrl(START_URL);
+        }
+    }
+
+
+    // =====================================================================
+    //  Жизненный цикл
+    // =====================================================================
+    @Override
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+
+        if (req == REQ_FILE) {
+            if (fileCb != null) {
+                fileCb.onReceiveValue(
+                    res == RESULT_OK
+                        ? WebChromeClient.FileChooserParams.parseResult(res, data)
+                        : null);
+                fileCb = null;
+            }
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle o) {
+        super.onSaveInstanceState(o);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void onBackPressed() {
+        if (web != null && web.canGoBack()) {
+            web.goBack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sessionLog("Приложение свёрнуто (onPause)");
+        if (web != null) {
+            web.onPause();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sessionLog("Приложение открыто (onResume)");
+        if (web != null) {
+            web.onResume();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        sessionLog("Приложение закрыто (onDestroy)");
+
+        try {
+            if (Build.VERSION.SDK_INT >= 33 && backCb != null) {
+                getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backCb);
+            }
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            if (web != null) {
+                root.removeView(web);
+                web.destroy();
+                web = null;
+            }
+        } catch (Throwable ignored) {
+        }
+
+        super.onDestroy();
+    }
+}
