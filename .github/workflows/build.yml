@@ -20,6 +20,10 @@ jobs:
             mkdir -p "$(dirname "$d")"
             mv "$f" "$d"
           done
+          # MainActivity.java лежит в корне репозитория - кладём его туда, где его видит Gradle
+          mkdir -p app/src/main/java/com/crystalaltar/game
+          if [ -f MainActivity.java ]; then mv MainActivity.java app/src/main/java/com/crystalaltar/game/MainActivity.java; fi
+          test -f app/src/main/java/com/crystalaltar/game/MainActivity.java
           find app -type f | grep -v '/assets/' || true
           test -f app/src/main/assets/index.html
       - name: Inject build number
