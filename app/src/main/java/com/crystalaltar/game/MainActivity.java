@@ -27,6 +27,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -39,6 +40,7 @@ public class MainActivity extends Activity {
     private FrameLayout root;
     private OnBackInvokedCallback backCb;
     private int renderGone = 0;
+    private long lastBack = 0;
 
     // построчный журнал: Android/data/<пакет>/files/session_log.txt
     private static final String LOG_NAME = "session_log.txt";
@@ -434,16 +436,12 @@ public class MainActivity extends Activity {
             logCrash("insets", t);
         }
 
+        hideSystemBars();
+
         // --- кнопка «Назад» (targetSdk 36: onBackPressed не вызывается) ---
         try {
             if (Build.VERSION.SDK_INT >= 33) {
-                backCb = () -> {
-                    if (web != null && web.canGoBack()) {
-                        web.goBack();
-                    } else {
-                        finish();
-                    }
-                };
+                backCb = () -> handleBack();
 
                 getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT, backCb);
@@ -609,10 +607,47 @@ public class MainActivity extends Activity {
     @Override
     @SuppressWarnings("deprecation")
     public void onBackPressed() {
+        handleBack();
+    }
+
+    /** «Назад»: если есть история WebView — назад по ней, иначе выход только по двойному нажатию */
+    private void handleBack() {
         if (web != null && web.canGoBack()) {
             web.goBack();
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (now - lastBack < 2000) {
+            finish();
         } else {
-            super.onBackPressed();
+            lastBack = now;
+            boolean ru = "ru".equals(Locale.getDefault().getLanguage());
+            Toast.makeText(this, ru ? "Нажмите ещё раз для выхода" : "Press back again to exit",
+                Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /** Полноэкранный режим: без статус-бара (часы, батарея) и кнопок навигации; панели выезжают по свайпу от края */
+    private void hideSystemBars() {
+        try {
+            WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+            androidx.core.view.WindowInsetsControllerCompat c =
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+            if (c != null) {
+                c.hide(WindowInsetsCompat.Type.systemBars());
+                c.setSystemBarsBehavior(
+                    androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        } catch (Throwable t) {
+            logCrash("hideSystemBars", t);
+        }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            hideSystemBars();
         }
     }
 
@@ -629,6 +664,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         sessionLog("Приложение открыто (onResume)");
+        hideSystemBars();
         if (web != null) {
             web.onResume();
         }
