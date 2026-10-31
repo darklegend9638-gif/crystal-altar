@@ -55,7 +55,7 @@ jobs:
             echo "KEY_PASSWORD=$SECRET_KEY_PASS" >> $GITHUB_ENV
           else
             echo "::warning::Secrets неполные или пустые - использую временный ключ"
-            keytool -genkeypair -keystore "$RUNNER_TEMP/release.jks" -alias tmp -keyalg RSA -keysize 2048 -validity 10000 -storepass temp1234 -keypass temp1234 -dname "CN=Crystal Altar"
+            keytool -genkeypair -keystore "$RUNNER_TEMP/release.jks" -alias tmp -keyalg RSA -keysize 2048 -validity 10000 -storepass temp1234 -keypass temp1234 -dname "CN=Crystal Altar Reborn"
             echo "KEYSTORE_PASSWORD=temp1234" >> $GITHUB_ENV
             echo "KEY_ALIAS=tmp" >> $GITHUB_ENV
             echo "KEY_PASSWORD=temp1234" >> $GITHUB_ENV
@@ -90,6 +90,6 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: Crystal Altar 2 (${{ github.run_number }})
+          name: Crystal Altar Reborn (${{ github.run_number }})
           make_latest: true
           files: out/Crystal-Altar.apk
