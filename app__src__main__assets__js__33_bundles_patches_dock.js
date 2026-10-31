@@ -131,7 +131,12 @@ defs.forEach(d=>{const c=document.createElement("div");c.className="uc";c.id="uc
  c.innerHTML='<h5>'+d[1]+'</h5><div class="lv"></div><div class="ic">'+d[2]+'</div><div class="st"></div><div class="go"></div>';
  c.onclick=d[4];dock.appendChild(c)});
 document.body.appendChild(dock);
-function draw(){try{$("hudG").textContent=$("gems").textContent;$("hudC").textContent=$("coins").textContent;
+const SUF=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"];
+function cmp(v){v=Math.floor(+v||0);if(!isFinite(v)||v<0)return"0";if(v<1e6)return String(v);
+ const e=Math.floor(Math.log10(v)/3);if(e>=SUF.length)return v.toExponential(2).replace("+","");
+ let m=v/Math.pow(10,e*3);if(m>=999.995){m=1;return m+SUF[Math.min(e+1,SUF.length-1)]}
+ return (m>=100?m.toFixed(0):m>=10?m.toFixed(1):m.toFixed(2)).replace(/(\.\d*?)0+$/,"$1").replace(/\.$/,"")+SUF[e]}
+function draw(){try{$("hudG").textContent=cmp(S.gem);$("hudC").textContent=cmp(S.coins);
  const wt=WT[S.w|0]||WT[0];defs.forEach((d,k)=>{const v=d[5](),c=$("uc_"+d[0]),s=Math.min(5,v.s);c.querySelector("h5").textContent=L2(d[1],["Luck","Income","Drop"][k]);c.querySelector(".ic").textContent=d[2];c.className="uc"+(v.ok?"":" no")+(v.mx?" mx":"");
   c.querySelector(".lv").textContent=v.l;c.querySelector(".st").innerHTML="<b>"+"★".repeat(s)+"</b>"+"★".repeat(5-s);
   c.querySelector(".go").innerHTML=v.mx?"MAX":fmt(v.c)+' <svg class="ico"><use href="#i-coin"/></svg>'})}catch(e){}}
@@ -140,7 +145,10 @@ setInterval(function(){document.hidden||draw()},500);draw();
 /* пока открыто любое меню/окно — док прокачек скрыт */
 const open=()=>{const pw=$("pwrap"),mb=$("menuBtn"),up=$("upgPanel"),rg=$("reg");
  return !!((pw&&pw.classList.contains("open"))||(mb&&mb.classList.contains("open"))||sh.classList.contains("show")||(up&&up.classList.contains("show"))||(rg&&rg.style.display==="flex")||document.querySelector(".confirm-modal.show"))};
-setInterval(()=>{document.hidden||(dock.style.display=open()?"none":"")},300);
+function updDock(){const v=open()?"none":"";if(dock.style.display!==v)dock.style.display=v;const a=$("dockArr");if(a&&a.style.display!==v)a.style.display=v}
+window.__dockUpd=updDock;
+new MutationObserver(updDock).observe(document.body,{subtree:!0,attributes:!0,attributeFilter:["class","style"]});
+setInterval(()=>{document.hidden||updDock()},300);
 /* регистрация: закрываемое окно входа (необязательно) */
 
 })();
@@ -188,7 +196,7 @@ b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"
 document.body.appendChild(b);
 function apply(){d.classList.toggle("dmin",!!min);b.classList.toggle("dmin",!!min);document.body.classList.toggle("dockmin",!!min)}
 b.onclick=function(e){e.stopPropagation();min=!min;try{localStorage.setItem(K,min?"1":"0")}catch(x){}apply()};
-apply();
+apply();try{window.__dockUpd&&window.__dockUpd()}catch(e){}
 setInterval(function(){if(document.hidden)return;var h=d.offsetHeight;if(h)document.documentElement.style.setProperty("--dh",h+"px");b.style.display=getComputedStyle(d).display==="none"?"none":""},400)}
 go()})();
 }catch(e){try{console.error("[33_bundles_patches_dock.js #58]",e)}catch(_){}}
