@@ -58,7 +58,7 @@ window.capAll=function(){try{if(S.tok&&typeof S.tok==="object")for(var _k in S.t
  if(S.dtw&&typeof S.dtw==="object")for(var k in S.dtw)if(!(S.dtw[k]<=CAP))S.dtw[k]=S.dtw[k]>CAP?CAP:0;
  if(S.wd&&typeof S.wd==="object")for(var k in S.wd){var d=S.wd[k];if(d&&!(d.coins<=CAP))d.coins=d.coins>CAP?CAP:0}
 }catch(e){}};
-setInterval(capAll,500);
+setInterval(function(){document.hidden||capAll()},1500);
 /* no scrolling under open menus */
 var OVS="#pwrap,#vp,#reg,.confirm-modal,#updM,#selPop";
 function vis(el){try{var s=getComputedStyle(el);return s.display!=="none"&&s.visibility!=="hidden"&&+s.opacity>0.01&&s.pointerEvents!=="none"}catch(e){return false}}
@@ -66,7 +66,7 @@ function openOvs(){var l=document.querySelectorAll(OVS),r=[];for(var i=0;i<l.len
 function openOv(){var r=openOvs();return r.length?r[0]:null}
 function inAny(r,sc){for(var i=0;i<r.length;i++)if(r[i].contains(sc))return true;return false}
 function sync(){var o=!!openOv();document.documentElement.classList.toggle("pl",o);document.body.classList.toggle("pl",o)}
-setInterval(sync,150);sync();
+setInterval(function(){document.hidden||sync()},400);sync();
 var sy=0;
 document.addEventListener("touchstart",function(e){sy=e.touches[0].clientY},{passive:true});
 document.addEventListener("touchmove",function(e){
@@ -126,7 +126,7 @@ const dock=document.createElement("div");dock.id="dock";
 const WT=[[["Чакра","🌀"],["Рамен","🍜"],["Свиток","📜"]],[["Ки","⚡"],["Зени","💴"],["Шары","🐉"]],[["Хаки","👁️"],["Берри","🪙"],["Сундук","🧰"]],[["Клинки","⚔️"],["Паёк","🍞"],["Трофей","🏆"]],[["Уровень","🌑"],["Золото","💰"],["Лут","🎒"]],[["Дыхание","🌊"],["Йены","💴"],["Маска","👺"]],[["Мана","🔮"],["Золото","💰"],["Гримуар","📖"]]];
 const defs=[["luck","Удача","🍀","#34d058",()=>$("luck").click(),()=>({l:S.luck|0,c:luckCost(),mx:S.luck>=MAXLUCK,ok:!$("luck").disabled,s:Math.floor(S.luck/10)})],
  ["inc","Доход","💰","#4da3ff",()=>$("inc").click(),()=>({l:S.inc|0,c:incCost(),mx:S.inc>=MAXINC,ok:!$("inc").disabled,s:Math.floor(S.inc/3)})],
- ["drop","Дроп","🎁","#b46cff",drBuy,()=>({l:dr(),c:drCost(),mx:dr()>=MAXDR,ok:!busy&&S.coins>=drCost(),s:Math.floor(dr()/10)})]];
+ ["drop","Дроп","🎁","#b46cff",drBuy,()=>({l:dr(),c:drCost(),mx:dr()>=MAXDR,ok:dr()<MAXDR&&!busy&&S.coins>=drCost(),s:Math.floor(dr()/10)})]];
 defs.forEach(d=>{const c=document.createElement("div");c.className="uc";c.id="uc_"+d[0];c.style.setProperty("--ac",d[3]);
  c.innerHTML='<h5>'+d[1]+'</h5><div class="lv"></div><div class="ic">'+d[2]+'</div><div class="st"></div><div class="go"></div>';
  c.onclick=d[4];dock.appendChild(c)});
@@ -136,11 +136,11 @@ function draw(){try{$("hudG").textContent=$("gems").textContent;$("hudC").textCo
   c.querySelector(".lv").textContent=v.l;c.querySelector(".st").innerHTML="<b>"+"★".repeat(s)+"</b>"+"★".repeat(5-s);
   c.querySelector(".go").innerHTML=v.mx?"MAX":fmt(v.c)+' <svg class="ico"><use href="#i-coin"/></svg>'})}catch(e){}}
 const _r=render;render=function(){const r=_r.apply(this,arguments);draw();return r};
-setInterval(draw,500);draw();
+setInterval(function(){document.hidden||draw()},500);draw();
 /* пока открыто любое меню/окно — док прокачек скрыт */
 const open=()=>{const pw=$("pwrap"),mb=$("menuBtn"),up=$("upgPanel"),rg=$("reg");
  return !!((pw&&pw.classList.contains("open"))||(mb&&mb.classList.contains("open"))||sh.classList.contains("show")||(up&&up.classList.contains("show"))||(rg&&rg.style.display==="flex")||document.querySelector(".confirm-modal.show"))};
-setInterval(()=>{dock.style.display=open()?"none":""},150);
+setInterval(()=>{document.hidden||(dock.style.display=open()?"none":"")},300);
 /* регистрация: закрываемое окно входа (необязательно) */
 
 })();
@@ -189,7 +189,7 @@ document.body.appendChild(b);
 function apply(){d.classList.toggle("dmin",!!min);b.classList.toggle("dmin",!!min);document.body.classList.toggle("dockmin",!!min)}
 b.onclick=function(e){e.stopPropagation();min=!min;try{localStorage.setItem(K,min?"1":"0")}catch(x){}apply()};
 apply();
-setInterval(function(){var h=d.offsetHeight;if(h)document.documentElement.style.setProperty("--dh",h+"px");b.style.display=getComputedStyle(d).display==="none"?"none":""},150)}
+setInterval(function(){if(document.hidden)return;var h=d.offsetHeight;if(h)document.documentElement.style.setProperty("--dh",h+"px");b.style.display=getComputedStyle(d).display==="none"?"none":""},400)}
 go()})();
 }catch(e){try{console.error("[33_bundles_patches_dock.js #58]",e)}catch(_){}}
 
