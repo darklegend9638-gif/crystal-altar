@@ -110,6 +110,7 @@ function bind(box,getW){box.onclick=e=>{const b=e.target.closest("button");if(!b
 bind($$("gxin"),()=>S.w);bind(pin,()=>panelW);
 $$("gxb").onclick=()=>window.gxOpen(sw(S.w).cur,S.w);
 window.gxOpen=(g,w)=>{w=(w==null)?S.w:w;if(!S.wu||!S.wu.includes(w))return;const st=sw(w);if(g!=null&&g!==st.cur){st.cur=g;st.last=-1}panelW=w;gp.style.display="block";ui(pin,w);openPanel("gxp")};
+window.addEventListener("ca-nf",()=>refresh());
 let _sg="";setInterval(()=>{const s2=S.w+"|"+Math.floor(S.coins)+"|"+S.luck+"|"+JSON.stringify(S.tok||0);if(s2!==_sg){_sg=s2;refresh()}},700);
 try{Object.assign(TX,{"🎴 Гачи мира":"🎴 World gachas"});applyStatic()}catch(e){}
 })();
