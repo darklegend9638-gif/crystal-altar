@@ -442,3 +442,10 @@ html body.dockmin main{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 30p
 
 /* ── reg-solid ── */
 html body #reg{background:radial-gradient(90% 62% at 50% 34%,#2b1b70 0%,#150e3b 38%,#080819 72%,#04040b 100%)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;z-index:2147483000!important}
+
+/* ── hud-fit: числа в шапке не выходят за рамку (автоподгонка шрифта в 36_hud_fit.js) ── */
+#hud{overflow:hidden}
+#hud .hi{flex:0 1 auto;min-width:0;overflow:hidden}
+#hud .hi>span{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* зазор между иконкой и текстом в кнопках второй строки */
+#upgBtn .ico,#mobb .ico,#wdb .ico{margin-right:6px;vertical-align:-4px}
