@@ -26,10 +26,14 @@ jobs:
           test -f app/src/main/java/com/crystalaltar/game/MainActivity.java
           find app -type f | grep -v '/assets/' || true
           test -f app/src/main/assets/index.html
+          test -f app/src/main/assets/js/03_game.js
+          test -f app/src/main/assets/css/base.css
       - name: Inject build number
         run: |
-          sed -i "s#__BUILD__#${{ github.run_number }}#g; s#__REPO__#${{ github.repository }}#g" app/src/main/assets/index.html
-          grep -c "${{ github.repository }}" app/src/main/assets/index.html || true
+          # __BUILD__ / __REPO__ теперь лежат в js/32_app_update.js, поэтому подставляем во все html и js
+          find app/src/main/assets -maxdepth 2 -type f \( -name '*.html' -o -name '*.js' \) \
+            -exec sed -i "s#__BUILD__#${{ github.run_number }}#g; s#__REPO__#${{ github.repository }}#g" {} +
+          grep -rl "${{ github.repository }}" app/src/main/assets --include=*.js --include=*.html || true
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
       - uses: android-actions/setup-android@v3
