@@ -1,4 +1,4 @@
-/* 14_profiles_exchange.js — просмотр игроков + обменник 💎⇄🪙
+/* 14_profiles_exchange.js — просмотр игроков
    (вынесено из index.html без изменений; порядок подключения — по номеру файла) */
 
 /* ── скрипт #11 ── */
@@ -84,65 +84,6 @@ const pb=document.getElementById("profb");if(pb)pb.addEventListener("click",open
 window.openPlayerProfile=showProfile;
 })();
 }catch(e){try{console.error("[14_profiles_exchange.js #11]",e)}catch(_){}}
-
-/* ── скрипт #12 ── */
-try{
-(function(){
-/* ===== ОБМЕННИК 💎 ⇄ 🪙 — курс меняется здесь ===== */
-const BUY0=600,   /* покупка: сколько монет за 1 тикет в главном мире */
-      SELL0=400;  /* продажа: сколько монет дают за 1 тикет в главном мире */
-/* в каждом следующем мире курс выше — множитель как у цены ролла (GM) */
-let BUY=BUY0,SELL=SELL0;
-const rt=()=>{const m=window.wGm?window.wGm():1;BUY=BUY0*m;SELL=SELL0*m};
-let dir="g2c";
-Object.assign(TX,{"Обменник":"Exchange"});
-const gem=()=>Math.floor(S.gem||0),coin=()=>Math.floor(S.coins||0);
-const inp=$("ex_in");
-const maxN=()=>{rt();return dir==="g2c"?gem():Math.floor(coin()/BUY)};
-const cnt=()=>Math.max(0,Math.floor(+inp.value)||0);
-function upd(){
- rt();const g2c=dir==="g2c",n=cnt();
- $("ex_t").textContent="💱 "+L2("Обменник","Exchange");
- $("ex_s").textContent=L2("Меняй тикеты на монеты и обратно. Покупать тикеты дороже, чем продавать.","Swap tickets for coins and back. Buying tickets costs more than selling.");
- $("ex_bal").textContent="🪙 "+fmt(coin())+"   💎 "+fmt(gem());
- $("ex_r1").textContent=L2("Продажа","Sell");$("ex_r1v").textContent="1 💎 → 🪙 "+fmt(SELL);
- $("ex_r2").textContent=L2("Покупка","Buy");$("ex_r2v").textContent="🪙 "+fmt(BUY)+" → 1 💎";
- $("ex_d1").textContent="💎 → 🪙";$("ex_d2").textContent="🪙 → 💎";
- $("ex_d1").className=g2c?"":"alt";$("ex_d2").className=g2c?"alt":"";
- $("ex_max").textContent=L2("Макс","Max")+" ("+fmt(maxN())+")";
- $("ex_pv").textContent=g2c?"💎 "+fmt(n)+" → 🪙 "+fmt(n*SELL):"🪙 "+fmt(n*BUY)+" → 💎 "+fmt(n);
- const ok=n>=1&&n<=maxN()&&ready&&!busy;
- $("ex_go").disabled=!ok;
- $("ex_go").textContent=n>maxN()?(g2c?L2("Не хватает тикетов","Not enough tickets"):L2("Не хватает монет","Not enough coins")):L2("Обменять","Exchange");
- $("ex_n").textContent=L2("Разница курсов — комиссия обменника: ","Rate gap is the exchange fee: ")+Math.round((1-SELL/BUY)*100)+"%";
-}
-function go(){
- rt();if(!ready||busy)return;
- const n=cnt();
- if(n<1)return toast(L2("Введи количество","Enter an amount"),"err");
- if(dir==="g2c"){
-  if(gem()<n)return toast(L2("Не хватает тикетов","Not enough tickets"),"err");
-  S.gem-=n;S.coins+=n*SELL;
-  toast(L2("Обмен: 💎 ","Exchanged: 💎 ")+fmt(n)+" → 🪙 "+fmt(n*SELL),"ok");
- }else{
-  const cost=n*BUY;
-  if(coin()<cost)return toast(L2("Не хватает монет","Not enough coins"),"err");
-  S.coins-=cost;S.gem=(S.gem||0)+n;
-  toast(L2("Обмен: 🪙 ","Exchanged: 🪙 ")+fmt(cost)+" → 💎 "+fmt(n),"ok");
- }
- render();save();pushSoon();upd();
-}
-$("exb").onclick=()=>{inp.value=1;upd();openPanel("exp")};
-$("exp").addEventListener("click",e=>{
- const d=e.target.closest("[data-exd]");if(d){dir=d.dataset.exd;inp.value=1;upd();return}
- const a=e.target.closest("[data-exa]");if(a){inp.value=a.dataset.exa==="max"?Math.max(1,maxN()):a.dataset.exa;upd();return}
- if(e.target.closest("#ex_go"))go();
-});
-inp.addEventListener("input",upd);
-const _r=render;render=function(){const r=_r.apply(this,arguments);try{if($("exp").style.display==="block")upd()}catch(e){}return r};
-try{setLang(LANG)}catch(e){}
-})();
-}catch(e){try{console.error("[14_profiles_exchange.js #12]",e)}catch(_){}}
 
 /* ── скрипт #13 ── */
 try{

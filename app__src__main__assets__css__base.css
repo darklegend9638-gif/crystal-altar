@@ -848,7 +848,7 @@ html:not(.js) *{scroll-behavior:auto}
 #pwrap,.pbox,#toplist,#col .it,.pbox .ti,.pbox .it{contain:none!important}
 button:focus,button:active{outline:none}
 #toplist,#toplist .ti{transition:none!important;animation:none!important}
-#shp,#topp,#promop,#clanp,#setp,#gmp,#stp,#qstp,#bpp,#trp,#admp,#wdp,#drp,#exp,#privp,#rwp,#shp .pbox{content-visibility:visible!important}
+#shp,#topp,#promop,#clanp,#setp,#gmp,#stp,#qstp,#bpp,#trp,#admp,#wdp,#drp,#privp,#rwp,#shp .pbox{content-visibility:visible!important}
 button,.glass,.pbox,#pwrap{-webkit-tap-highlight-color:transparent}
 .fxp,.fxw,.fxr{will-change:auto!important}
 .orb[data-w="1"]:not([data-rf]) .ring{background:conic-gradient(from 0deg,#bfefff,#fff 18%,#5cc8ff 40%,#bfefff 58%,#8fd8ff 78%,#fff)}
