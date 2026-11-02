@@ -465,3 +465,42 @@ html body #reg{background:radial-gradient(90% 62% at 50% 34%,#2b1b70 0%,#150e3b 
 .confirm-modal .modal-box{max-height:calc(100% - 12px);overflow-y:auto;overscroll-behavior:contain}
 html.fw #ld .r,html.fw #ld .t{visibility:hidden}
 #ld .r,#ld .t{font-family:"Exo 2","Segoe UI",system-ui,sans-serif!important;font-variant-numeric:normal!important;font-weight:700!important}
+
+/* ══ FULLSCREEN UI: окна и меню на весь экран, как в играх ══ */
+:root{--fs-t:env(safe-area-inset-top,0px);--fs-b:env(safe-area-inset-bottom,0px);--fs-l:env(safe-area-inset-left,0px);--fs-r:env(safe-area-inset-right,0px)}
+
+/* окна-панели (магазин, топ, настройки, кланы, мини-игры и т.д.) */
+#pwrap{padding:0!important;align-items:stretch!important;justify-content:stretch!important;background:#07050f!important}
+#pwrap .pbox,#pwrap.open .pbox,#gmp.pbox,#clanp.pbox,#shp.pbox{
+  width:100vw!important;max-width:none!important;
+  height:100vh!important;height:100dvh!important;max-height:none!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  padding-top:calc(var(--fs-t) + 14px)!important;
+  padding-bottom:calc(var(--fs-b) + 20px)!important;
+  padding-left:calc(var(--fs-l) + 16px)!important;
+  padding-right:calc(var(--fs-r) + 16px)!important;
+  box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#pwrap .pbox .pclose{top:calc(var(--fs-t) + 10px)!important;right:calc(var(--fs-r) + 12px)!important;width:42px;height:42px}
+
+/* главное меню (кнопка ☰) — полноэкранный список */
+#menu{
+  position:fixed!important;inset:0!important;top:0!important;right:0!important;
+  width:100vw;max-width:none!important;min-width:0!important;height:100vh;height:100dvh;
+  box-sizing:border-box;border:0!important;border-radius:0!important;box-shadow:none!important;
+  padding:calc(var(--fs-t) + 66px) calc(var(--fs-r) + 16px) calc(var(--fs-b) + 20px) calc(var(--fs-l) + 16px)!important;
+  gap:10px!important;overflow-y:auto;overscroll-behavior:contain;z-index:52!important;
+  background:radial-gradient(120% 60% at 50% 0%,rgba(76,41,160,.38),rgba(7,5,15,0) 70%),#07050f!important;
+  transform:none!important}
+#menu button{padding:16px 18px!important;font-size:16px}
+#menuBtn.open{z-index:53!important}
+
+/* вход / регистрация */
+#reg{padding:0!important;align-items:stretch!important;background:#07050f!important}
+#reg .box{width:100%!important;max-width:none!important;height:100%;box-sizing:border-box;border:0!important;border-radius:0!important;box-shadow:none!important;
+  padding:calc(var(--fs-t) + 22px) calc(var(--fs-r) + 22px) calc(var(--fs-b) + 22px) calc(var(--fs-l) + 22px)!important;
+  overflow-y:auto;display:block}
+
+/* окно выбора (selPop) тоже на весь экран; confirm/notice/del остаются диалогами */
+#selPop.confirm-modal.show{padding:0!important;align-items:stretch!important}
+#selPop .modal-box{width:100%!important;max-width:none!important;height:100%;max-height:none!important;border-radius:0!important;border:0!important;box-sizing:border-box;
+  padding:calc(var(--fs-t) + 20px) calc(var(--fs-r) + 16px) calc(var(--fs-b) + 20px) calc(var(--fs-l) + 16px)!important}
