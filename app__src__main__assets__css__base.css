@@ -5,7 +5,7 @@
 
 /* ── ldcss ── */
 html{background:#05060c}
-#ld{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);background:radial-gradient(90% 62% at 50% 34%,#2b1b70 0%,#150e3b 38%,#080819 72%,#04040b 100%);color:#eef2ff;font-family:"Russo One","Segoe UI",system-ui,sans-serif;touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none;transition:opacity .5s ease,transform .5s ease}
+#ld{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);background:radial-gradient(90% 62% at 50% 34%,#2b1b70 0%,#150e3b 38%,#080819 72%,#04040b 100%);color:#eef2ff;font-family:"Exo 2","Segoe UI",system-ui,sans-serif;touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none;transition:opacity .5s ease,transform .5s ease}
 #ld.out{opacity:0;transform:scale(1.04);pointer-events:none}
 #ld:before{content:"";position:absolute;left:50%;top:34%;width:120vmax;height:120vmax;margin:-60vmax 0 0 -60vmax;background:repeating-conic-gradient(from 0deg,rgba(140,110,255,.17) 0 6deg,transparent 6deg 18deg);-webkit-mask:radial-gradient(circle,#000 0,transparent 58%);mask:radial-gradient(circle,#000 0,transparent 58%);animation:ldr 70s linear infinite;will-change:transform}
 #ld:after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(120% 100% at 50% 40%,transparent 52%,rgba(0,0,0,.72) 100%)}
@@ -46,8 +46,8 @@ html.ldw body>*:not(#ld){visibility:hidden!important}
   --inp:#0a0e1b;
   --c0:#8a93a8;--c1:#5eea8a;--c2:#4da3ff;--c3:#b46cff;
   --c4:#ffb82e;--c5:#ff4d6d;--c6:#1ee3cf;--c7:#ffe98a;
-  --fb:"Russo One","Segoe UI",system-ui,sans-serif;
-  --fh:"Russo One","Segoe UI",system-ui,sans-serif;
+  --fb:"Exo 2","Segoe UI",system-ui,sans-serif;
+  --fh:"Exo 2","Segoe UI",system-ui,sans-serif;
   /* новые токены */
   --acc:#2dd4bf;--acc2:#38bdf8;--gold:#fbbf24;--hot:#ff4d8d;
   --card:rgba(255,255,255,.04);
