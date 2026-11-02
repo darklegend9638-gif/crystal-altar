@@ -68,8 +68,18 @@ function bump(stat,col){
   stat.classList.remove("cfx-bump");void stat.offsetWidth;stat.classList.add("cfx-bump");
   stat.addEventListener("animationend",()=>stat.classList.remove("cfx-bump"),{once:true});
 }
+/* разница двух double при огромном балансе (~1e19+) округляется до кратного 4096 — для выдачи админом показываем точную сумму */
+function exactDelta(id,d){
+  try{
+    const h=window.__cfxHint;
+    if(h&&h.id===id&&Date.now()-h.t<4000&&h.v>0&&Math.abs(d-h.v)<=h.v*0.01+Math.abs(+VAL[id]())*1e-15){window.__cfxHint=null;return h.v}
+  }catch(e){}
+  return d;
+}
+const flyAt={},skip={};
 function fly(id,delta,t){
   const c=CFG[id];if(!c||!t)return;
+  flyAt[id]=Date.now();
   const o=origin(),L=getLayer();
   const n=Math.max(5,Math.min(16,Math.round(4+Math.log10(delta+1)*1.7)));
   for(let i=0;i<n;i++){
@@ -95,7 +105,7 @@ function fly(id,delta,t){
   }
   /* подпись «+N» у места, откуда вылетели монеты */
   try{
-    const l=document.createElement("div");l.className="cfx-t";l.textContent="+"+fmt(delta);l.style.color=c.color;
+    const l=document.createElement("div");l.className="cfx-t";l.textContent="+"+fmt(exactDelta(id,delta));l.style.color=c.color;
     L.appendChild(l);
     const a=l.animate([
       {transform:"translate("+(o.x-24)+"px,"+(o.y-10)+"px) scale(.7)",opacity:0},
@@ -133,6 +143,7 @@ function check(id,el){
   const prev=last[id];last[id]=cur;
   if(prev===undefined)return false;
   const d=cur-prev;
+  if(d>0&&skip[id]&&skip[id].until>Date.now()&&d>=skip[id].v*0.5){skip[id]=null;held[id]={txt:null};setTimeout(()=>release(id,el),HOLD);return true}  /* уже анимировано вручную (cfxGive) */
   if(!(d>0)||!canAnimate())return false;
   if(id==="coins"&&isPassive(d))return false;
   const t=target(id);if(!t)return false;
@@ -156,6 +167,18 @@ function hook(id){
   setInterval(()=>check(id,el),250);
 }
 hook("coins");hook("gems");
+
+/* Выдача админом: анимация на КАЖДЫЙ клик, независимо от «армирования», пассивного дохода и удержания HUD.
+   t0 — момент клика: если обычный перехват уже запустил полёт после t0, второй раз не летим. */
+window.cfxGive=function(id,amount,t0){
+  try{
+    if(!(amount>0)||document.hidden||eco()||RMq.matches)return;
+    if(flyAt[id]>=(t0||0))return;
+    const t=target(id);if(!t)return;
+    skip[id]={until:Date.now()+3000,v:amount};
+    fly(id,amount,t);
+  }catch(e){console.error("[39_coin_fly]",e)}
+};
 
 /* вернулись в приложение — копившийся фоном доход наградой не считаем */
 document.addEventListener("visibilitychange",()=>{
