@@ -101,8 +101,8 @@ setInterval(__one(()=>{if(!document.hidden)return push()}),1000),document.addEve
    Можно давать несколько типов сразу:  ex_all: { luck: 2, gain: 5 }
    Чтобы убрать буст — удалите строку этого титула.
    ========================================================================================== */
-window.nfMode=function(){var m=window.__nf;if(!m){try{m=localStorage.getItem("ca-nf")}catch(e){}m=window.__nf=(m==="words"||m==="full")?m:"short"}return m};
-window.nfSet=function(m){m=(m==="words"||m==="full")?m:"short";window.__nf=m;try{localStorage.setItem("ca-nf",m)}catch(e){}};
+window.nfMode=function(){return"short"};
+window.nfSet=function(){};
 const NFW_RU=[null,["тысяча","тысячи","тысяч"],["миллион","миллиона","миллионов"],["миллиард","миллиарда","миллиардов"],["триллион","триллиона","триллионов"],["квадриллион","квадриллиона","квадриллионов"],["квинтиллион","квинтиллиона","квинтиллионов"],["секстиллион","секстиллиона","секстиллионов"],["септиллион","септиллиона","септиллионов"],["октиллион","октиллиона","октиллионов"],["нониллион","нониллиона","нониллионов"],["дециллион","дециллиона","дециллионов"]],
 NFW_EN=["","thousand","million","billion","trillion","quadrillion","quintillion","sextillion","septillion","octillion","nonillion","decillion"];
 const SUF=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"],fmt=e=>{
@@ -114,9 +114,9 @@ if(a<1e15)d=String(a);else{const q=a.toExponential(14).split("e");d=q[0].replace
 return(e<0?"-":"")+d.replace(/\B(?=(\d{3})+(?!\d))/g,en?",":".")}
 if(e<1e4)return Math.floor(e).toString();
 let t=Math.floor(Math.log10(e)/3),n=e/Math.pow(1e3,t);
-+n.toFixed(2)>=1e3&&(t++,n/=1e3);
+n>=1e3&&(t++,n/=1e3);
 if(t>=SUF.length)return e.toExponential(2);
-const v=+n.toFixed(2);
+const v=Math.floor(n*100+1e-6)/100;
 if(m==="words"){
 if(en)return v+" "+NFW_EN[t];
 let f;if(!Number.isInteger(v))f=1;else{const a=v%100,b=v%10;f=(a>=11&&a<=14)?2:b===1?0:(b>=2&&b<=4)?1:2}

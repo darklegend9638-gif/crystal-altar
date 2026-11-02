@@ -98,9 +98,8 @@ document.head.appendChild(css);
 H.setAttribute("data-theme","dark");try{localStorage.removeItem("ca-theme")}catch(e){}
 if(ld("eco")==="1")H.classList.add("eco");
 function sett(){
-  const eco=H.classList.contains("eco"),cur=H.getAttribute("data-theme")||"dark",nm=window.nfMode?window.nfMode():"short";
-  return `<div style="font-weight:700;margin-top:6px">🔋 ${L2("Экономия батареи","Battery saver")}</div><div class="xr"><button class="${eco?"":"alt"}" data-x="eco">${eco?L2("Включена","On"):L2("Выключена","Off")}</button></div><div style="color:var(--mute);font-size:12px">${L2("Отключает анимации и фон со звёздами.","Turns off animations and the star background.")}</div>`+
-   `<div style="font-weight:700;margin-top:14px">🔢 ${L2("Формат чисел","Number format")}</div><div class="xr"><button class="${nm==="short"?"":"alt"}" data-x="nf:short">1M</button><button class="${nm==="words"?"":"alt"}" data-x="nf:words">${L2("1 миллион","1 million")}</button><button class="${nm==="full"?"":"alt"}" data-x="nf:full">${L2("1.000.000","1,000,000")}</button></div><div style="color:var(--mute);font-size:12px">${L2("Как показывать монеты и другие большие числа.","How to show coins and other big numbers.")}</div>`}
+  const eco=H.classList.contains("eco"),cur=H.getAttribute("data-theme")||"dark";
+  return `<div style="font-weight:700;margin-top:6px">🔋 ${L2("Экономия батареи","Battery saver")}</div><div class="xr"><button class="${eco?"":"alt"}" data-x="eco">${eco?L2("Включена","On"):L2("Выключена","Off")}</button></div><div style="color:var(--mute);font-size:12px">${L2("Отключает анимации и фон со звёздами.","Turns off animations and the star background.")}</div>`}
 function profSet(){const e=g("s_ext");if(!e)return;e.innerHTML=sett()}
 window.__profSet=profSet;
 function draw(){profSet()}
@@ -109,7 +108,6 @@ function act(d){
   if(a[0]==="lang"){setLang(LANG==="en"?"ru":"en");profSet()}
   else if(a[0]==="th"){}
   else if(a[0]==="eco"){H.classList.toggle("eco");sv("eco",H.classList.contains("eco")?"1":"0");draw()}
-  else if(a[0]==="nf"){window.nfSet&&window.nfSet(a[1]);try{render()}catch(e){}profSet()}
 }
 {const se=g("s_ext");if(se){se.onclick=e=>{const b=e.target.closest("[data-x]");if(b)act(b.dataset.x)};profSet()}}
 
