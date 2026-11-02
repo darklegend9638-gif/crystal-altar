@@ -451,3 +451,17 @@ html body #reg{background:radial-gradient(90% 62% at 50% 34%,#2b1b70 0%,#150e3b 
 @keyframes cmIn{from{opacity:0}to{opacity:1}}
 .confirm-modal.show{animation:cmIn .14s ease-out both}
 .confirm-modal .modal-box{backface-visibility:hidden}
+
+/* ── solid fix: без прозрачности, без мигания, без прыжков при клавиатуре ── */
+.confirm-modal,.confirm-modal.show,#reg,#pwrap,#pwrap.open{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.confirm-modal{background:#07050f!important}
+.confirm-modal.show{animation:none!important;opacity:1!important}
+#pwrap{background:#07050f!important;transition:none!important}
+#pwrap:not(.open){opacity:0}
+.pbox,.glass,#menu{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+#menu{background:var(--bg2)!important}
+.confirm-modal .modal-box{background:linear-gradient(180deg,#1a1233,#0d1021 46%)!important;opacity:1!important}
+.confirm-modal.show{align-items:flex-start!important;padding-top:max(18px,9vh)!important;overflow:hidden}
+.confirm-modal .modal-box{max-height:calc(100% - 12px);overflow-y:auto;overscroll-behavior:contain}
+html.fw #ld .r,html.fw #ld .t{visibility:hidden}
+#ld .r,#ld .t{font-family:"Exo 2","Segoe UI",system-ui,sans-serif!important;font-variant-numeric:normal!important;font-weight:700!important}
