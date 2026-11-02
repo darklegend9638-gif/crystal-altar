@@ -1,10 +1,10 @@
-/* 39_coin_fly.js — монеты/тикеты «прилетают» в счётчики шапки (#hudC / #hudG), когда их становится больше
-   (награды, подарки, выигрыши, выдача админом, переводы…). Пассивный доход по секундам не анимируется. */
+/* 39_coin_fly.js — монеты/тикеты «прилетают» в счётчики шапки (#hudC / #hudG) при ЛЮБОЙ награде
+   (ежедневка, батлпасс, данжи, мобы, подарки, выдача админом…). Пассивный доход по секундам не анимируется:
+   он распознаётся по кратности доходу в секунду (один тик = incNow()), всё остальное — награда. */
 try{
 (function(){"use strict";
 const HUD={coins:"hudC",gems:"hudG"};
 const VAL={coins:()=>S.coins,gems:()=>S.gem||0};
-
 const CFG={
   coins:{color:"#ffc83d",glow:"rgba(255,190,40,.9)",emoji:"🪙"},
   gems:{color:"#5ee7ff",glow:"rgba(60,200,255,.9)",emoji:"💎"}
@@ -13,15 +13,15 @@ const HOLD=650;            /* сколько держим старое числ�
 const eco=()=>document.documentElement.classList.contains("eco");
 const RMq=matchMedia("(prefers-reduced-motion:reduce)");
 
-/* ───────── стили ───────── */
+/* ───────── стили (подсветка живёт только внутри анимации — ничего не залипает) ───────── */
 const css=document.createElement("style");
 css.textContent=
 "#cfx{position:fixed;inset:0;pointer-events:none;z-index:99999;overflow:hidden}"+
 ".cfx-p{position:fixed;left:0;top:0;width:26px;height:26px;margin:-13px 0 0 -13px;will-change:transform,opacity;pointer-events:none}"+
 ".cfx-p svg,.cfx-p span{width:100%;height:100%;display:block;font-size:22px;line-height:26px;text-align:center}"+
 ".cfx-t{position:fixed;left:0;top:0;font:800 18px var(--fh);white-space:nowrap;pointer-events:none;will-change:transform,opacity;text-shadow:0 2px 10px rgba(0,0,0,.8)}"+
-"@keyframes cfxBump{0%{transform:scale(1)}35%{transform:scale(1.09)}100%{transform:scale(1)}}"+
-".cfx-bump{animation:cfxBump .32s cubic-bezier(.2,.9,.3,1.3);box-shadow:0 0 22px -2px var(--cfx-g,rgba(255,190,40,.8))!important}";
+"@keyframes cfxBump{0%{transform:scale(1);filter:none}35%{transform:scale(1.1);filter:drop-shadow(0 0 7px var(--cfx-g,rgba(255,190,40,.9)))}100%{transform:scale(1);filter:none}}"+
+".cfx-bump{animation:cfxBump .34s cubic-bezier(.2,.9,.3,1.3)}";
 document.head.appendChild(css);
 
 let layer=null;
@@ -36,6 +36,7 @@ function armed(){
   wasReady=rd;
   return rd&&Date.now()>=armAt;
 }
+const canAnimate=()=>!document.hidden&&!eco()&&!RMq.matches&&armed();
 
 /* ───────── откуда летим ───────── */
 let lp={x:0,y:0,t:0};
@@ -49,7 +50,7 @@ function origin(){
   return{x:innerWidth/2,y:innerHeight*.6};
 }
 
-/* ───────── куда летим ───────── */
+/* ───────── куда летим (видимый HUD) ───────── */
 function target(id){
   const el=document.getElementById(HUD[id]),pill=el&&(el.closest(".hi")||el.parentElement);
   if(!el||!pill)return null;
@@ -65,6 +66,7 @@ function bump(stat,col){
   const n=Date.now();if(n-bumpT<90)return;bumpT=n;
   stat.style.setProperty("--cfx-g",col);
   stat.classList.remove("cfx-bump");void stat.offsetWidth;stat.classList.add("cfx-bump");
+  stat.addEventListener("animationend",()=>stat.classList.remove("cfx-bump"),{once:true});
 }
 function fly(id,delta,t){
   const c=CFG[id];if(!c||!t)return;
@@ -91,7 +93,7 @@ function fly(id,delta,t){
     anim.onfinish=()=>{p.remove();bump(t.stat,c.glow)};
     anim.oncancel=()=>p.remove();
   }
-  /* всплывающая подпись «+N» у места, откуда вылетели монеты */
+  /* подпись «+N» у места, откуда вылетели монеты */
   try{
     const l=document.createElement("div");l.className="cfx-t";l.textContent="+"+fmt(delta);l.style.color=c.color;
     L.appendChild(l);
@@ -104,15 +106,39 @@ function fly(id,delta,t){
   }catch(e){}
 }
 
-/* ───────── перехват записи в HUD ───────── */
-const last={},held={};   /* last — прошлое числовое значение; held — пока летят монеты, показываем старый текст */
+/* ───────── награда или пассивный доход? ─────────
+   Раз в секунду игра добавляет ровно floor(доход). Если прирост ≈ k·доход (k=1…4) — это тики, иначе — награда. */
+function isPassive(d){
+  if(d<=2)return true;
+  let inc=0;try{inc=+incNow()||0}catch(e){}
+  if(!(inc>0))return false;
+  const tol=2+inc*1e-6;
+  for(let k=1;k<=4;k++)if(Math.abs(d-k*inc)<=tol+k)return true;
+  return false;
+}
+
+/* ───────── перехват: HUD показывает старое число, пока летят монеты ───────── */
+const last={},held={};
 const TC=Object.getOwnPropertyDescriptor(Node.prototype,"textContent");
-function shouldFly(id,prev,cur){
+
+function release(id,el){
+  const x=held[id];delete held[id];
+  if(x&&x.txt!=null)TC.set.call(el,x.txt);
+  else{try{render()}catch(e){}}                  /* значение ещё не записывалось — просим HUD перерисоваться */
+}
+function check(id,el){
+  if(held[id])return false;
+  let cur=NaN;try{cur=+VAL[id]()}catch(e){}
+  if(!isFinite(cur))return false;
+  const prev=last[id];last[id]=cur;
+  if(prev===undefined)return false;
   const d=cur-prev;
-  if(!(d>0)||!isFinite(d))return false;
-  if(document.hidden||eco()||RMq.matches)return false;
-  if(!armed())return false;
-  if(id==="coins"){let inc=0;try{inc=+incNow()||0}catch(e){}if(d<=Math.max(2,inc*2.5))return false}   /* пассивный доход */
+  if(!(d>0)||!canAnimate())return false;
+  if(id==="coins"&&isPassive(d))return false;
+  const t=target(id);if(!t)return false;
+  held[id]={txt:null};
+  try{fly(id,d,t)}catch(e){console.error("[39_coin_fly]",e)}
+  setTimeout(()=>release(id,el),HOLD);
   return true;
 }
 function hook(id){
@@ -122,25 +148,19 @@ function hook(id){
   Object.defineProperty(el,"textContent",{configurable:true,
     get(){return TC.get.call(el)},
     set(v){
-      const h=held[id];
-      if(h){h.txt=v;return}
-      let cur=NaN;try{cur=+VAL[id]()}catch(e){}
-      const prev=last[id];
-      if(isFinite(cur)){
-        last[id]=cur;
-        if(prev!==undefined&&shouldFly(id,prev,cur)){
-          const t=target(id);
-          if(t){
-            held[id]={txt:v};
-            try{fly(id,cur-prev,t)}catch(e){console.error("[39_coin_fly]",e)}
-            setTimeout(()=>{const x=held[id];delete held[id];TC.set.call(el,x?x.txt:v)},HOLD);
-            return;
-          }
-        }
-      }
+      check(id,el);
+      if(held[id]){held[id].txt=v;return}
       TC.set.call(el,v);
     }});
+  /* «сэмплер»: держит базу актуальной (даже если HUD не перезаписывался) и ловит награды между перерисовками */
+  setInterval(()=>check(id,el),250);
 }
 hook("coins");hook("gems");
+
+/* вернулись в приложение — копившийся фоном доход наградой не считаем */
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden)return;
+  for(const id in HUD){try{last[id]=+VAL[id]()}catch(e){}}
+});
 })();
 }catch(e){try{console.error("[39_coin_fly.js]",e)}catch(_){}}
