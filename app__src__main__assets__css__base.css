@@ -894,3 +894,10 @@ html body button:active:not(:disabled),html body .pbox button:active:not(:disabl
 
 /* ── fix-reg-overflow ── */
 #avs,#s_avs{grid-template-columns:repeat(auto-fill,minmax(44px,1fr))!important}#avs>*,#s_avs>*{min-width:0!important;max-width:100%!important;box-sizing:border-box}#reg .box,#reg .row,#reg .avup,#reg .box>button{max-width:100%;box-sizing:border-box}#reg .box{overflow-x:hidden}#reg .avup{width:100%}
+
+/* чёрный экран, пока не загрузится шрифт (макс. 3 сек), затем плавное появление */
+#ld>*{transition:opacity .4s ease}
+html.fw #ld{background:#000!important}
+html.fw #ld>*{opacity:0!important}
+html.fw #ld:before,html.fw #ld:after{opacity:0!important}
+html.fw #bgfx{visibility:hidden!important}
