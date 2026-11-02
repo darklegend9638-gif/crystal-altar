@@ -23,7 +23,7 @@ css.textContent=
 ".sec-n{color:var(--mute);font-size:12px;margin-top:6px;line-height:1.35}"+
 ".sec-w{color:#ffb02e;font-size:12px;margin-top:8px;line-height:1.35}"+
 ".sec-st{font-size:13px;min-height:18px;margin-top:6px}"+
-"#tfa{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(2,4,10,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}"+
+"#tfa{position:fixed;inset:0;z-index:2147483647!important;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(2,4,10,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}"+
 "#tfa .tb{width:100%;max-width:370px;padding:22px;border-radius:26px;background:radial-gradient(120% 60% at 50% -8%,rgba(168,85,247,.38),transparent 62%),linear-gradient(180deg,#1a1034,#0d0a1f);border:1px solid rgba(180,130,255,.55);box-shadow:0 34px 90px -18px rgba(0,0,0,.9),0 0 34px -10px rgba(168,85,247,.55)}"+
 "#tfa .tt{display:block;font:800 20px var(--fh);margin-bottom:6px}#tfa .ts{font-size:14px;color:var(--mute);margin-bottom:12px;line-height:1.4}"+
 "#tfa input{width:100%;box-sizing:border-box;text-align:center;font:800 28px/1 var(--fh);letter-spacing:.35em;padding:12px 8px}";
