@@ -36,6 +36,9 @@ import androidx.webkit.WebViewAssetLoader;
 
 public class MainActivity extends Activity {
 
+    /** true, пока игра на экране (уведомления в это время не показываются) */
+    static volatile boolean foreground = false;
+
     private WebView web;
     private FrameLayout root;
     private OnBackInvokedCallback backCb;
@@ -114,6 +117,56 @@ public class MainActivity extends Activity {
                 text = text.substring(0, 2000) + "...";
             }
             sessionLog(text);
+        }
+
+
+        // ---------- системные уведомления ----------
+        @JavascriptInterface
+        public boolean notifAllowed() {
+            return Notifier.allowed(MainActivity.this);
+        }
+
+        /** Запрос разрешения (Android 13+) */
+        @JavascriptInterface
+        public void notifRequest() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Notifier.ensureChannel(MainActivity.this);
+                        if (Build.VERSION.SDK_INT >= 33 && !Notifier.allowed(MainActivity.this)) {
+                            requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 4102);
+                        }
+                    } catch (Throwable t) {
+                        logCrash("notifRequest", t);
+                    }
+                }
+            });
+        }
+
+        /** Открыть системные настройки уведомлений приложения */
+        @JavascriptInterface
+        public void notifSettings() {
+            try {
+                Intent i = new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+                i.putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getPackageName());
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(i);
+            } catch (Throwable t) {
+                logCrash("notifSettings", t);
+            }
+        }
+
+        /** Запланировать напоминание: id 1..9, время в мс (epoch) */
+        @JavascriptInterface
+        public void notifSchedule(int id, double whenMs, String title, String text) {
+            Notifier.ensureChannel(MainActivity.this);
+            Notifier.schedule(MainActivity.this, id, (long) whenMs, title, text);
+        }
+
+        @JavascriptInterface
+        public void notifCancel(int id) {
+            Notifier.cancel(MainActivity.this, id);
         }
 
         @JavascriptInterface
@@ -380,6 +433,10 @@ public class MainActivity extends Activity {
         installCrashLog();
 
         super.onCreate(b);
+        try {
+            Notifier.ensureChannel(this);
+        } catch (Throwable ignored) {
+        }
         sessionLog("=== ЗАПУСК приложения · Android " + Build.VERSION.RELEASE
             + " (API " + Build.VERSION.SDK_INT + ") · " + Build.MANUFACTURER + " " + Build.MODEL + " ===");
 
@@ -654,6 +711,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        foreground = false;
         sessionLog("Приложение свёрнуто (onPause)");
         if (web != null) {
             web.onPause();
@@ -663,6 +721,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        foreground = true;
         sessionLog("Приложение открыто (onResume)");
         hideSystemBars();
         if (web != null) {
