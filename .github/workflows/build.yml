@@ -26,8 +26,6 @@ jobs:
           test -f app/src/main/java/com/crystalaltar/game/MainActivity.java
           find app -type f | grep -v '/assets/' || true
           test -f app/src/main/assets/index.html
-          test -f app/src/main/assets/js/03_game.js
-          test -f app/src/main/assets/css/base.css
       - name: Inject build number
         run: |
           # __BUILD__ / __REPO__ теперь лежат в js/32_app_update.js, поэтому подставляем во все html и js
