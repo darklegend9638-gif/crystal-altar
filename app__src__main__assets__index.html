@@ -4229,12 +4229,12 @@ go()})();
 try{
 /* Журнал заходов: Android/data/<пакет>/files/sessions.json и report.txt */
 (function(){
-  if(!window.AndroidBridge||!AndroidBridge.writeFile||!AndroidBridge.readFile)return;
+  if(!window.AndroidBridge)return;
   var MAXS=40,MAXE=400,SKIP={wd:1,en:1,et:1,pl:1,pm:1,ps:1};
   var LBL={coins:"Монеты",gem:"Тикеты",luck:"Удача (уровень)",inc:"Доход (уровень)",rolls:"Роллы",found:"Коллекция",pt:"Питомцы",gp:"Геймпассы",w:"Мир",best:"Лучшая редкость",wu:"Открытые миры",dr:"Ежедневная награда",dq:"Ежедневные задания",rb:"Перерождения"};
   var ST={coins:"Монеты",gems:"Тикеты",luck:"Удача",income:"Доход",rolls:"Роллы",items:"Предметов в коллекции",pets:"Питомцев"};
   var H=[],cur=null,last=null,dirty=false,lastW=0;
-  try{var tx=AndroidBridge.readFile("sessions.json");var a=tx?JSON.parse(tx):[];if(Array.isArray(a))H=a}catch(e){}
+  try{var tx=localStorage.getItem("ca_sessions");var a=tx?JSON.parse(tx):[];if(Array.isArray(a))H=a}catch(e){}
   function pad(n){return n<10?"0"+n:""+n}
   function fd(t){var d=new Date(t);return pad(d.getDate())+"."+pad(d.getMonth()+1)+"."+d.getFullYear()+" "+pad(d.getHours())+":"+pad(d.getMinutes())}
   function ft(t){var d=new Date(t);return pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds())}
@@ -4370,7 +4370,7 @@ try{
     if(!H.length)return;var n=Date.now();
     if(!f&&(!dirty||n-lastW<5000))return;
     dirty=false;lastW=n;
-    try{AndroidBridge.writeFile("sessions.json",pretty());AndroidBridge.writeFile("report.txt",report())}catch(e){}
+    try{localStorage.setItem("ca_sessions",JSON.stringify(H))}catch(e){}
   }
   setInterval(tick,3000);setTimeout(tick,1500);
   document.addEventListener("visibilitychange",function(){if(document.hidden){tick();flush(true)}});
