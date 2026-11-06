@@ -65,9 +65,9 @@ public class MainActivity extends Activity {
     // =====================================================================
     private class Bridge {
 
-        /** Разрешены только sessions.json и report.txt */
+        /** Файлы из JS больше не пишутся: всё идёт в session_log.txt через log() */
         private File sessFile(String name) {
-            if (!"sessions.json".equals(name) && !"report.txt".equals(name)) {
+            if (true) {
                 return null;
             }
 
@@ -190,57 +190,46 @@ public class MainActivity extends Activity {
     //  (при первом запуске и после обновления)
     // =====================================================================
     private void exportAssets() {
+        // Больше ничего не копируем. Просто убираем старый мусор от прошлых версий.
         Thread th = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    // Android/data/<пакет>/files
                     File files = getExternalFilesDir(null);
                     if (files == null) {
                         return;
                     }
-
-                    // Android/data/<пакет>
-                    File base = files.getParentFile();
-                    File out = new File(base, "assets");
-
-                    long stamp = getPackageManager()
-                        .getPackageInfo(getPackageName(), 0).lastUpdateTime;
-
-                    File mark = new File(out, ".version");
-                    if (mark.exists() && readAll(mark).trim().equals(String.valueOf(stamp))) {
-                        return;
-                    }
-
-                    out.mkdirs();
-
-                    String[] top = getAssets().list("");
-                    if (top != null) {
-                        for (String n : top) {
-                            if (n.equals("images")
-                                    || n.equals("webkit")
-                                    || n.equals("sounds")
-                                    || n.equals("geoid_map")) {
-                                continue;
-                            }
-                            copyAssetTree(n, new File(out, n));
+                    String[] junk = {"launch.txt", "report.txt", "sessions.json", "crash.txt",
+                            "sessions.json.tmp", "report.txt.tmp"};
+                    for (String n : junk) {
+                        File f = new File(files, n);
+                        if (f.exists()) {
+                            f.delete();
                         }
                     }
-
-                    FileOutputStream m = new FileOutputStream(mark);
-                    try {
-                        m.write(String.valueOf(stamp).getBytes(StandardCharsets.UTF_8));
-                    } finally {
-                        m.close();
+                    File base = files.getParentFile();
+                    if (base != null) {
+                        deleteTree(new File(base, "assets"));
                     }
-
                 } catch (Throwable ignored) {
                 }
             }
         });
-
         th.setPriority(Thread.MIN_PRIORITY);
         th.start();
+    }
+
+    private static void deleteTree(File f) {
+        if (f == null || !f.exists()) {
+            return;
+        }
+        File[] kids = f.listFiles();
+        if (kids != null) {
+            for (File k : kids) {
+                deleteTree(k);
+            }
+        }
+        f.delete();
     }
 
     private void copyAssetTree(String path, File dest) throws Exception {
@@ -293,8 +282,7 @@ public class MainActivity extends Activity {
 
     // =====================================================================
     //  Диагностика
-    //  launch.txt  - пишется при старте
-    //  crash.txt   - пишется при падении
+    //  Единственный файл в files/: session_log.txt (запуск, ошибки, краши, журнал заходов)
     //  Папка: Android/data/<пакет>/files
     // =====================================================================
     private void installCrashLog() {
@@ -303,12 +291,6 @@ public class MainActivity extends Activity {
             if (d != null) {
                 d.mkdirs();
 
-                FileOutputStream o = new FileOutputStream(new File(d, "launch.txt"));
-                try {
-                    o.write(("onCreate " + new java.util.Date()).getBytes(StandardCharsets.UTF_8));
-                } finally {
-                    o.close();
-                }
             }
         } catch (Throwable ignored) {
         }
@@ -318,29 +300,7 @@ public class MainActivity extends Activity {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
-                try {
-                    File d = getExternalFilesDir(null);
-                    if (d != null) {
-                        d.mkdirs();
-
-                        java.io.StringWriter sw = new java.io.StringWriter();
-                        e.printStackTrace(new java.io.PrintWriter(sw));
-
-                        sessionLog("!!! КРАШ в потоке " + t.getName() + ": " + e);
-
-                        FileOutputStream o = new FileOutputStream(new File(d, "crash.txt"), true);
-                        try {
-                            String text = "=== " + new java.util.Date()
-                                + " thread=" + t.getName() + "\n"
-                                + sw + "\n";
-                            o.write(text.getBytes(StandardCharsets.UTF_8));
-                        } finally {
-                            o.close();
-                        }
-                    }
-                } catch (Throwable ignored) {
-                }
-
+                logCrash("FATAL " + t.getName(), e);
                 if (prev != null) {
                     prev.uncaughtException(t, e);
                 }
@@ -348,27 +308,12 @@ public class MainActivity extends Activity {
         });
     }
 
-    /** Пишет пойманную (не фатальную) ошибку в Android/data/<пакет>/files/crash.txt */
+    /** Пишет пойманную ошибку со стеком в session_log.txt */
     private void logCrash(String where, Throwable e) {
         try {
-            File d = getExternalFilesDir(null);
-            if (d == null) {
-                return;
-            }
-            d.mkdirs();
-
             java.io.StringWriter sw = new java.io.StringWriter();
             e.printStackTrace(new java.io.PrintWriter(sw));
-
-            FileOutputStream o = new FileOutputStream(new File(d, "crash.txt"), true);
-            try {
-                String text = "=== caught @" + where + " "
-                    + new java.util.Date() + "\n"
-                    + sw + "\n";
-                o.write(text.getBytes(StandardCharsets.UTF_8));
-            } finally {
-                o.close();
-            }
+            sessionLog("[CRASH @" + where + "] " + sw);
         } catch (Throwable ignored) {
         }
     }
@@ -410,7 +355,7 @@ public class MainActivity extends Activity {
                 }
 
                 String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date());
-                String line = "[" + time + "] " + msg + "\n";
+                String line = "[" + time + "] " + msg + (msg.indexOf('\n') >= 0 ? "\n\n" : "\n");
 
                 FileOutputStream o = new FileOutputStream(f, true);
                 try {
@@ -429,7 +374,7 @@ public class MainActivity extends Activity {
     // =====================================================================
     @Override
     protected void onCreate(Bundle b) {
-        // создаёт Android/data/<пакет>/files + launch.txt
+        // создаёт Android/data/<пакет>/files
         installCrashLog();
 
         super.onCreate(b);
